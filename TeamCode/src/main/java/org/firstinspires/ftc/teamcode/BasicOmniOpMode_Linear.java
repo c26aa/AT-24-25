@@ -22,6 +22,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private Servo intake3 = null;
     private Servo intake4 = null;
     private Servo intake5 = null;
+    private Servo intake6 = null;
+    private Servo intake7 = null;
+    private DcMotor slide1 = null;
+    private DcMotor slide2 = null;
 
     // Add variables for slow mode
     private boolean slowMode = false;
@@ -36,11 +40,16 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         leftBackDrive  = hardwareMap.get(DcMotor.class, "left_back_drive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
+        slide1 = hardwareMap.get(DcMotor.class, "slide_1");
+        slide2 = hardwareMap.get(DcMotor.class, "slide_2");
         intake1 = hardwareMap.get(Servo.class, "intake_1");
         intake2 = hardwareMap.get(Servo.class, "intake_2");
         intake3 = hardwareMap.get(Servo.class, "intake_3");
         intake4 = hardwareMap.get(Servo.class, "intake_4");
         intake5 = hardwareMap.get(Servo.class, "intake_5");
+        intake6 = hardwareMap.get(Servo.class, "intake_6");
+        intake7 = hardwareMap.get(Servo.class, "intake_7");
+
 
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -72,7 +81,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 axial *= SLOW_MODE_FACTOR;
                 lateral *= SLOW_MODE_FACTOR;
                 yaw *= SLOW_MODE_FACTOR;
-            }
+
+
+
 
             double leftFrontPower  = axial + lateral + yaw;
             double rightFrontPower = axial - lateral - yaw;
@@ -95,7 +106,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             leftBackDrive.setPower(leftBackPower);
             rightBackDrive.setPower(rightBackPower);
 
-            // Servo control (unchanged)
+            // Servo control (unchanged) this sucks change this
             if (gamepad2.a) intake1.setPosition(1);
             if (gamepad2.b) intake2.setPosition(1);
             if (gamepad2.x) intake3.setPosition(1);
@@ -109,4 +120,4 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             telemetry.update();
         }
     }
-}
+}}
