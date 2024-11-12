@@ -11,21 +11,25 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Disabled
 public class BasicOmniOpMode_Linear extends LinearOpMode {
 
+    private double currentPosition = 0.45;
+    private double currentPosition1 = 0.4;// Start the servo at the middle position
+    private static final double CHANGE_AMOUNT = 0.02;
+
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFrontDrive = null;
     private DcMotor leftBackDrive = null;
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
-    private Servo intake1 = null;
-    private Servo intake2 = null;
+    private Servo slide_left = null;
+    private Servo slide_right = null;
     private Servo intake3 = null;
     private Servo intake4 = null;
     private Servo intake5 = null;
     private Servo intake6 = null;
     private Servo intake7 = null;
-    private DcMotor slide1 = null;
-    private DcMotor slide2 = null;
+    private DcMotor lift_left = null;
+    private DcMotor lift_right = null;
 
     // Add variables for slow mode
     private boolean slowMode = false;
@@ -36,14 +40,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     public void runOpMode() {
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFrontDrive  = hardwareMap.get(DcMotor.class, "left_front_drive");
-        leftBackDrive  = hardwareMap.get(DcMotor.class, "left_back_drive");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
-        slide1 = hardwareMap.get(DcMotor.class, "slide_1");
-        slide2 = hardwareMap.get(DcMotor.class, "slide_2");
-        intake1 = hardwareMap.get(Servo.class, "intake_1");
-        intake2 = hardwareMap.get(Servo.class, "intake_2");
+        leftFrontDrive  = hardwareMap.get(DcMotor.class, "lf");
+        leftBackDrive  = hardwareMap.get(DcMotor.class, "lb");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "rf");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "rb");
+        lift_left = hardwareMap.get(DcMotor.class, "slide_1");
+        lift_right = hardwareMap.get(DcMotor.class, "slide_2");
+        slide_left = hardwareMap.get(Servo.class, "intake_1");
+        slide_right = hardwareMap.get(Servo.class, "intake_2");
         intake3 = hardwareMap.get(Servo.class, "intake_3");
         intake4 = hardwareMap.get(Servo.class, "intake_4");
         intake5 = hardwareMap.get(Servo.class, "intake_5");
@@ -107,10 +111,32 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             rightBackDrive.setPower(rightBackPower);
 
             // Servo control (unchanged) this sucks change this
-            if (gamepad2.a) intake1.setPosition(1);
-            if (gamepad2.b) intake2.setPosition(1);
-            if (gamepad2.x) intake3.setPosition(1);
-            if (gamepad2.y) intake4.setPosition(1);
+            if (gamepad2.left_trigger > 0.1){
+                currentPosition += CHANGE_AMOUNT;
+                currentPosition = Math.min(Math.max(currentPosition, 0.45), 0.8);//makes sure its never above or below min and max value
+                slide_left.setPosition(currentPosition);
+                currentPosition1 -= CHANGE_AMOUNT;
+                currentPosition1 = Math.min(Math.max(currentPosition1, 0.1), 0.4);
+                slide_right.setPosition(currentPosition1);
+                sleep(100);// 100 ms delay each time
+            }
+
+            if (gamepad2.right_trigger > 0.1){
+                currentPosition -= CHANGE_AMOUNT;
+                currentPosition = Math.min(Math.max(currentPosition, 0.45), 0.8);//makes sure its never above or below min and max value
+                slide_left.setPosition(currentPosition);
+                currentPosition1 += CHANGE_AMOUNT;
+                currentPosition1 = Math.min(Math.max(currentPosition1, 0.1), 0.4);
+                slide_right.setPosition(currentPosition1);
+                sleep(100);// 100 ms delay each time
+            }
+
+            if (gamepad2.x) {
+
+            }
+            if (gamepad2.y) {
+
+            }
             if (gamepad2.dpad_up) intake5.setPosition(1);
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
