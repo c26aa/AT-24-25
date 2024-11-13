@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="Basic: Omni Linear OpMode", group="Linear OpMode")
-@Disabled
+//@Disabled
 public class BasicOmniOpMode_Linear extends LinearOpMode {
 
     private double currentPosition = 0.45;
@@ -23,11 +23,12 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private DcMotor rightBackDrive = null;
     private Servo slide_left = null;
     private Servo slide_right = null;
-    private Servo intake3 = null;
-    private Servo intake4 = null;
-    private Servo intake5 = null;
-    private Servo intake6 = null;
-    private Servo intake7 = null;
+    private Servo bar_left = null;
+    private Servo bar_right = null;
+    private Servo left_right_hinge = null;
+    private Servo up_down_hinge = null;
+    private Servo claw = null;
+    private Servo bucket = null;
     private DcMotor lift_left = null;
     private DcMotor lift_right = null;
 
@@ -44,21 +45,32 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         leftBackDrive  = hardwareMap.get(DcMotor.class, "lb");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "rf");
         rightBackDrive = hardwareMap.get(DcMotor.class, "rb");
-        lift_left = hardwareMap.get(DcMotor.class, "slide_1");
-        lift_right = hardwareMap.get(DcMotor.class, "slide_2");
-        slide_left = hardwareMap.get(Servo.class, "intake_1");
-        slide_right = hardwareMap.get(Servo.class, "intake_2");
-        intake3 = hardwareMap.get(Servo.class, "intake_3");
-        intake4 = hardwareMap.get(Servo.class, "intake_4");
-        intake5 = hardwareMap.get(Servo.class, "intake_5");
-        intake6 = hardwareMap.get(Servo.class, "intake_6");
-        intake7 = hardwareMap.get(Servo.class, "intake_7");
+        lift_left = hardwareMap.get(DcMotor.class, "scl"); //left lift
+        lift_right = hardwareMap.get(DcMotor.class, "scr"); // right lift
+        slide_left = hardwareMap.get(Servo.class, "sll");
+        slide_right = hardwareMap.get(Servo.class, "slr");
+        bar_left = hardwareMap.get(Servo.class, "brl");
+        bar_right = hardwareMap.get(Servo.class, "brr");
+        left_right_hinge = hardwareMap.get(Servo.class, "hlr");
+        up_down_hinge = hardwareMap.get(Servo.class, "hup");
+        claw = hardwareMap.get(Servo.class, "clw");
+        bucket = hardwareMap.get(Servo.class, "bkt");
 
 
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+
+        leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        lift_left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift_right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         telemetry.addData("Status", "Initialized"); // print to control hub
         telemetry.update();
@@ -69,12 +81,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         while (opModeIsActive()) {
             double max;
 
-            // Check for slow mode toggle
-            boolean currentBState = gamepad1.b;
-            if (currentBState && !previousBState) {
+//             Check for slow mode toggle
+            if (gamepad1.b) {
                 slowMode = !slowMode;
             }
-            previousBState = currentBState;
+            if (gamepad1.x)
+            {
+                slowMode = !slowMode;
+            }
 
             double axial   = -gamepad1.left_stick_y;
             double lateral =  gamepad1.left_stick_x;
@@ -85,6 +99,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 axial *= SLOW_MODE_FACTOR;
                 lateral *= SLOW_MODE_FACTOR;
                 yaw *= SLOW_MODE_FACTOR;
+            }
 
 
 
@@ -137,7 +152,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad2.y) {
 
             }
-            if (gamepad2.dpad_up) intake5.setPosition(1);
+
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Slow Mode", slowMode ? "Enabled" : "Disabled");
@@ -146,4 +161,4 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             telemetry.update();
         }
     }
-}}
+}
