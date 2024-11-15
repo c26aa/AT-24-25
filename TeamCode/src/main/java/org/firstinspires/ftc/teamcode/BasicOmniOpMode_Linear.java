@@ -147,10 +147,10 @@ bucket.setPosition(.99);
 
             if (gamepad2.right_trigger > 0.1){
                 currentPosition -= CHANGE_AMOUNT;
-                currentPosition = Math.min(Math.max(currentPosition, 0.45), 0.8);//makes sure its never above or below min and max value
+                currentPosition = Math.min(Math.max(currentPosition, 0.45), 0.9);//makes sure its never above or below min and max value
                 slide_left.setPosition(currentPosition);
                 currentPosition1 += CHANGE_AMOUNT;
-                currentPosition1 = Math.min(Math.max(currentPosition1, 0.1), 0.4);
+                currentPosition1 = Math.min(Math.max(currentPosition1, 0.1), 0.5);
                 slide_right.setPosition(currentPosition1);
                 sleep(100);// 100 ms delay each time
             }
