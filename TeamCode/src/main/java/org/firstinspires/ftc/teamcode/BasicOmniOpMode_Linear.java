@@ -163,7 +163,7 @@ bucket.setPosition(.99);
                 lift_left.setPower(lift_power);
 //                lift_left.setTargetPosition(lift_max);
 //                lift_left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift_right.setPower(lift_power);
+                lift_right.setPower(-lift_power);
 //                lift_right.setTargetPosition(lift_max);
 //                lift_right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
@@ -171,7 +171,7 @@ bucket.setPosition(.99);
                 lift_left.setPower(-lift_power);
 //                lift_left.setTargetPosition(lift_min);
 //                lift_left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift_right.setPower(-lift_power);
+                lift_right.setPower(lift_power);
 //                lift_right.setTargetPosition(lift_min);
 //                lift_right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
