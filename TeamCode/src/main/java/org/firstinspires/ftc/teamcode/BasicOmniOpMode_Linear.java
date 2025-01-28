@@ -3,20 +3,22 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name="Atomic Tele-Op", group="Linear OpMode")
+@TeleOp(name = "Atomic Tele-Op", group = "Linear OpMode")
 //@Disabled
 public class BasicOmniOpMode_Linear extends LinearOpMode {
 
-    private double currentPosition = 0.45;
-    private double currentPosition1 = 0.4; // Start the servo at the middle position
-    private static final double CHANGE_AMOUNT = 0.02;
-    private final double claw_start = 0.5;
-    private double claw_target = 0.5;
-    private static final double claw_speed = 0.01;
+    private double currentPosition = 0.27;
+    private double currentPosition1 = 0.15; // Start the servo at the middle position
+    private static final double CHANGE_AMOUNT = 0.005;
+    public boolean useLiftEncoder = false;
+    public int lift_target = 0;
+
 
     // Declare OpMode members for each of the 4 motors.
     private final ElapsedTime runtime = new ElapsedTime();
@@ -31,20 +33,22 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private Servo left_right_hinge = null;
     private Servo up_down_hinge = null;
     private Servo claw = null;
-    private Servo bucket = null;
+    //    private CRServo claw = null;
+    private Servo top_arm = null;
+    private Servo outtake_claw = null;
     private DcMotor lift_left = null;
     private DcMotor lift_right = null;
 
     // Add variables for slow mode
     private boolean slowMode = false;
-    private final double SLOW_MODE_FACTOR = 0.5; // Adjust this value to change the slow mode speed
+    private final double SLOW_MODE_FACTOR = 0.25; // Adjust this value to change the slow mode speed
 
     @Override
     public void runOpMode() {
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFrontDrive  = hardwareMap.get(DcMotor.class, "lf");
-        leftBackDrive  = hardwareMap.get(DcMotor.class, "lb");
+        leftFrontDrive = hardwareMap.get(DcMotor.class, "lf");
+        leftBackDrive = hardwareMap.get(DcMotor.class, "lb");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "rf");
         rightBackDrive = hardwareMap.get(DcMotor.class, "rb");
         lift_left = hardwareMap.get(DcMotor.class, "scl"); //left lift
@@ -54,10 +58,15 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         bar_left = hardwareMap.get(Servo.class, "brl");
         bar_right = hardwareMap.get(Servo.class, "brr");
         left_right_hinge = hardwareMap.get(Servo.class, "hlr");
-        up_down_hinge = hardwareMap.get(Servo.class, "hup");
+        up_down_hinge = hardwareMap.get(Servo.class, "hud");
         claw = hardwareMap.get(Servo.class, "clw");
-        bucket = hardwareMap.get(Servo.class, "bkt");
+//        claw = hardwareMap.get(CRServo.class, "clw");
+        top_arm = hardwareMap.get(Servo.class, "tam");
+        outtake_claw = hardwareMap.get(Servo.class, "ocw");
 
+
+        lift_left.setDirection(DcMotor.Direction.REVERSE);
+        lift_right.setDirection(DcMotor.Direction.REVERSE);
 
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -71,6 +80,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
         lift_left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift_right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift_left.setMode((DcMotor.RunMode.RUN_WITHOUT_ENCODER));
+        lift_right.setMode((DcMotor.RunMode.RUN_WITHOUT_ENCODER));
         lift_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lift_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -83,25 +94,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         while (opModeIsActive()) {
             double max;
 
-//             Check for slow mode toggle
-            if (gamepad1.b) {
-                slowMode = !slowMode;
-            }
-            if (gamepad1.x)
-            {
-                slowMode = !slowMode;
-            }
-            if(gamepad1.left_bumper){
-bucket.setPosition(.6);
-            }
 
-            if(gamepad1.right_bumper){
-bucket.setPosition(.99);
-            }
-
-            double axial   = -gamepad1.left_stick_y;
-            double lateral =  gamepad1.left_stick_x;
-            double yaw     =  gamepad1.right_stick_x;
+            double axial = -gamepad1.left_stick_y;
+            double lateral = gamepad1.left_stick_x;
+            double yaw = gamepad1.right_stick_x;
 
             // Apply slow mode factor if enabled
             if (slowMode) {
@@ -111,108 +107,231 @@ bucket.setPosition(.99);
             }
 
 
-
-
-            double leftFrontPower  = axial + lateral + yaw;
+            double leftFrontPower = axial - lateral + yaw;
             double rightFrontPower = axial - lateral - yaw;
-            double leftBackPower   = axial - lateral + yaw;
-            double rightBackPower  = axial + lateral - yaw;
+            double leftBackPower = axial + lateral + yaw;
+            double rightBackPower = axial + lateral - yaw;
 
             max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
             max = Math.max(max, Math.abs(leftBackPower));
             max = Math.max(max, Math.abs(rightBackPower));
 
-            if (max > 1.0) {
-                leftFrontPower  /= max;
+            if (max > 0.7) {
+                leftFrontPower /= max;
                 rightFrontPower /= max;
-                leftBackPower   /= max;
-                rightBackPower  /= max;
+                leftBackPower /= max;
+                rightBackPower /= max;
             }
 
             leftFrontDrive.setPower(leftFrontPower);
             rightFrontDrive.setPower(rightFrontPower);
             leftBackDrive.setPower(leftBackPower);
             rightBackDrive.setPower(rightBackPower);
+//                slide_left.setPosition(0.8);// good up
+//                slide_right.setPosition(0.9);//down
+//                slide_right.setPosition(0.3);//good up positon
+//                slide_left.setPosition(0.2);//down position
 
+            //all gamepad 2 stuff
             // Servo control (unchanged) this sucks change this
-            if (gamepad2.left_trigger > 0.1){
+            if (gamepad2.left_trigger > 0.1) {//closed positon
                 currentPosition += CHANGE_AMOUNT;
-                currentPosition = Math.min(Math.max(currentPosition, 0.45), 0.8);//makes sure its never above or below min and max value
+                currentPosition = Math.min(Math.max(currentPosition, 0.2), 0.8);//makes sure its never above or below min and max value
                 slide_left.setPosition(currentPosition);
                 currentPosition1 -= CHANGE_AMOUNT;
-                currentPosition1 = Math.min(Math.max(currentPosition1, 0.1), 0.4);
+                currentPosition1 = Math.min(Math.max(currentPosition1, 0.3), 0.9);
                 slide_right.setPosition(currentPosition1);
-                sleep(100);// 100 ms delay each time
+
+
             }
 
-            if (gamepad2.right_trigger > 0.1){
+            if (gamepad2.right_trigger > 0.1) {//
                 currentPosition -= CHANGE_AMOUNT;
-                currentPosition = Math.min(Math.max(currentPosition, 0.45), 0.8);//makes sure its never above or below min and max value
+                currentPosition = Math.min(Math.max(currentPosition, 0.2), 0.8);//makes sure its never above or below min and max value
                 slide_left.setPosition(currentPosition);
                 currentPosition1 += CHANGE_AMOUNT;
-                currentPosition1 = Math.min(Math.max(currentPosition1, 0.1), 0.4);
+                currentPosition1 = Math.min(Math.max(currentPosition1, 0.3), 0.9);
                 slide_right.setPosition(currentPosition1);
-                sleep(100);// 100 ms delay each time
+
             }
-            double lift_power = 0.2;//95
-        int lift_max_right = 3000;//not true
-        int lift_min_right = 3000;//not true
-            int lift_max_left = 3000;//not true
-            int lift_min_left = 3000;//not true
-            if (gamepad2.dpad_up) {//scissor lift
-                lift_left.setPower(lift_power);
-//                lift_left.setTargetPosition(lift_max);
+            double lift_power_right = 0.7;//95
+            double lift_power_left = 0.7;
+//            int lift_max_left = 435;
+//            int lift_min_left = 0;
+
+            if(gamepad2.dpad_up || gamepad2.dpad_down) {
+                useLiftEncoder = false;
+            }else if (gamepad2.dpad_right || gamepad2.dpad_left){
+                useLiftEncoder = true;
+            }
+
+            if (useLiftEncoder) {
+                if (gamepad2.dpad_right) {// set lift targets
+                    lift_target = 1000;
+                    // Move lift up using encoders
+                } else if (gamepad2.dpad_left) {
+                    lift_target = 420;
+                    // Move lift down using encoders
+                }
+                //NOTE TO SELF: IMPLEMENT MORE ROBUST CORRECTION MECHANISM
+                if (lift_target<lift_left.getCurrentPosition()+15){
+                    lift_left.setPower(.7);
+                }
+                else if (lift_target>lift_left.getCurrentPosition()-15){
+                    lift_left.setPower(-.7);
+                }
+                else{
+                    lift_left.setPower(0);
+                }
+
+            }
+            if (gamepad2.dpad_up && lift_left.getCurrentPosition()<1500) {//scissor lift
+                lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                telemetry.addLine("Switched to manual control mode.");
+                lift_left.setPower(lift_power_left);
+
+                telemetry.addData("Left Lift Power", lift_left.getPower());
+                telemetry.addData("Lift encoder value", lift_left.getCurrentPosition());
+                telemetry.addData("Right Lift Power", lift_right.getPower());
+                telemetry.update();
+            } else if (gamepad2.dpad_down && lift_left.getCurrentPosition()>30) {
+                lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                telemetry.addLine("Switched to manual control mode.");
+                lift_left.setPower(-lift_power_left);
+
+                telemetry.addData("Left Lift Power", lift_left.getPower());
+                telemetry.addData("Lift encoder value", lift_left.getCurrentPosition());
+                telemetry.addData("Right Lift Power", lift_right.getPower());
+                telemetry.update();
+            } else {
+                lift_left.setPower(0);
+            }
+
+            lift_right.setPower(lift_left.getPower());
+
+
+            if (gamepad2.y) {//back position
+                bar_left.setPosition(0.61);
+                bar_right.setPosition(0.55);
+                left_right_hinge.setPosition(0.72);
+                up_down_hinge.setPosition(0.3);
+
+            }
+
+            if (gamepad2.b) {//regular pick up
+                bar_left.setPosition(0.38);
+                bar_right.setPosition(0.77);
+                left_right_hinge.setPosition(0.72);
+                up_down_hinge.setPosition(1.0);
+
+            }
+
+            if (gamepad2.a) {//claw middle
+                bar_left.setPosition(0.4);
+                bar_right.setPosition(0.76);
+                left_right_hinge.setPosition(0.72);
+                up_down_hinge.setPosition(0.5);
+            }
+            if (gamepad2.x) {//handoff
+                outtake_claw.setPosition(.2);
+                bar_left.setPosition(0.65);
+                bar_right.setPosition(0.51);
+                left_right_hinge.setPosition(0.72);
+                up_down_hinge.setPosition(0.0);
+                top_arm.setPosition(0.7);
+                slide_left.setPosition(0.61);
+                slide_right.setPosition(0.49);
+                sleep(1500);
+                outtake_claw.setPosition(.45);
+                sleep(500);
+                claw.setPosition(0.55);
+                top_arm.setPosition(0.1);
+//                lift_left.setTargetPosition(lift_left.getCurrentPosition() + 500); // find right encoder value
 //                lift_left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift_right.setPower(lift_power);
-//                lift_right.setTargetPosition(lift_max);
-//                lift_right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            }
-            if (gamepad2.dpad_down) {
-                lift_left.setPower(-lift_power);
-//                lift_left.setTargetPosition(lift_min);
-//                lift_left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift_right.setPower(-lift_power);
-//                lift_right.setTargetPosition(lift_min);
-//                lift_right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                telemetry.addLine("encoder mode inside function.");
+//                lift_left.setPower(0.5);
+//                lift_right.setPower(lift_left.getPower());
+//                while (lift_left.isBusy()) {
+//                    sleep(10000000);
+//                }
+//                lift_left.setPower(0);
+//                lift_right.setPower(0);
+//                top_arm.setPosition(0.2);
+
             }
 
-            if(gamepad2.y) {//back position
-                bar_left.setPosition(1.0);
-                bar_right.setPosition(1.0);
-                left_right_hinge.setPosition(0.6);
-                up_down_hinge.setPosition(0.27);
-                claw.setPosition(0.5);
+
+            if (gamepad2.right_bumper) {//close
+                claw.setPosition(0.93);//95
+            }
+            if (gamepad2.left_bumper) {//open
+                claw.setPosition(0.55);
+
             }
 
-            if(gamepad2.b) {//pick up from top
-//                bar_left.setPosition(null);
-//                bar_right.setPosition(null);
-//                left_right_hinge.setPosition(0.6);
-//                up_down_hinge.setPosition(0.35);
-//                claw.setPosition(0.5);
+            if (gamepad2.left_stick_x > 0.2){
+                bar_left.setPosition(0.61);
+                bar_right.setPosition(0.55);
+                left_right_hinge.setPosition(0.5);
+                up_down_hinge.setPosition(0.2);
+            }
+            if (gamepad2.left_stick_x < -0.2){
+                bar_left.setPosition(0.61);
+                bar_right.setPosition(0.55);
+                left_right_hinge.setPosition(0.9);
+                up_down_hinge.setPosition(0.2);
             }
 
-            if(gamepad2.a) {// pick up from side
-//                bar_left.setPosition(null);
-//                bar_right.setPosition(null);
-//                left_right_hinge.setPosition(0.6);
-//                up_down_hinge.setPosition(0.42);
-//                claw.setPosition(0.5);
-            }
 
-            double leftStickX = gamepad1.left_stick_x;
-            claw_target = 0.5 + Math.abs((leftStickX * 0.1));
-            if (gamepad2.left_stick_x > 0 || gamepad2.left_stick_x < 0 ){
-                claw.setPosition(claw_target);
-            }
-            if (gamepad2.right_stick_x > 0 ){
-                left_right_hinge.setPosition(0.55);
-            }
-            else if (gamepad2.right_stick_x < 0 ) {
-                left_right_hinge.setPosition(0.65);
-            }
             int lift_encoder_value = lift_left.getCurrentPosition();
             int lift_encoder_value2 = lift_right.getCurrentPosition();
+
+            //all game pad 1 stuff
+
+            //             Check for slow mode toggle
+            if (gamepad1.b && slowMode == false) {
+                slowMode = !slowMode;
+            }
+            if (gamepad1.x && slowMode == true) {
+                slowMode = !slowMode;
+            }
+//            if (gamepad1.a){//get ready to clip
+//                top_arm.setPosition(0.7);
+//                lift_left.setTargetPosition();// find right value
+//                lift_left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                telemetry.addLine("encoder mode inside function.");
+//                lift_left.setPower(0.5);
+//                while (lift_left.isBusy()) {
+//                    sleep(10000000);
+//                }
+//                lift_left.setPower(0);
+//                lift_right.setPower(0);
+//                outtake_claw.setPosition(.2);
+//
+//
+//            }
+
+            if (gamepad1.left_bumper) {//open
+                outtake_claw.setPosition(.2);
+            }
+
+            if (gamepad1.right_bumper) {//close
+                outtake_claw.setPosition(0.45);
+
+            }
+            if (gamepad1.dpad_down) {//towards front/handoff
+                top_arm.setPosition(0.8);
+
+            }
+            if (gamepad1.dpad_up) {
+                top_arm.setPosition(0.1);// back side
+
+            }
+            if (gamepad1.dpad_left) {
+                top_arm.setPosition(0.2);//for bucket
+
+            }
+
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Slow Mode", slowMode ? "Enabled" : "Disabled");
@@ -221,6 +340,18 @@ bucket.setPosition(.99);
             telemetry.addData("encoder_value_left", lift_encoder_value);
             telemetry.addData("encoder_value_right", lift_encoder_value2);
             telemetry.update();
+
+//            if (gamepad2.right_bumper) { // active intake code
+//                // Spin the servo forward
+//                claw.setPower(0.95); // Full forward speed
+//            } else if (gamepad2.left_bumper) {
+//                // Spin the servo backward
+//                claw.setPower(-0.95); // Full reverse speed
+//            } else {
+//                // Stop the servo
+//                claw.setPower(0.0); // Neutral position
+//            }
+
         }
     }
 }
