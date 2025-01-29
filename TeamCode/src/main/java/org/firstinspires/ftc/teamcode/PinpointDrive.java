@@ -26,6 +26,7 @@
 // * Unless otherwise noted, comments are from Gobilda
 // */
 //@Config
+////Mecanum Drive used to be final
 //public class PinpointDrive extends MecanumDrive {
 //    public static class Params {
 //        /*
@@ -87,6 +88,7 @@
 //        if (PARAMS.usePinpointIMUForTuning) {
 //            lazyImu = new LazyImu(hardwareMap, PARAMS.pinpointDeviceName, new RevHubOrientationOnRobot(zyxOrientation(0, 0, 0)));
 //        }
+//
 //
 //        // RR localizer note: don't love this conversion (change driver?)
 //        pinpoint.setOffsets(DistanceUnit.MM.fromInches(PARAMS.xOffset), DistanceUnit.MM.fromInches(PARAMS.yOffset));

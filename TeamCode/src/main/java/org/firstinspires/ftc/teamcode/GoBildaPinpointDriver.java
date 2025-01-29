@@ -1,3 +1,5 @@
+package org.firstinspires.ftc.teamcode;
+
 /*   MIT License
  *   Copyright (c) [2024] [Base 10 Assets, LLC]
  *
@@ -19,8 +21,6 @@
  *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *   SOFTWARE.
  */
-
-package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.util.TypeConversion.byteArrayToInt;
 
@@ -313,15 +313,8 @@ public class GoBildaPinpointDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSi
      * @param yEncoder FORWARD or REVERSED, Y (strafe) pod should increase when the robot is moving left
      */
     public void setEncoderDirections(EncoderDirection xEncoder, EncoderDirection yEncoder){
-        if (xEncoder == EncoderDirection.FORWARD){
-            writeInt(Register.DEVICE_CONTROL,1<<5);
-        }
         if (xEncoder == EncoderDirection.REVERSED) {
             writeInt(Register.DEVICE_CONTROL,1<<4);
-        }
-
-        if (yEncoder == EncoderDirection.FORWARD){
-            writeInt(Register.DEVICE_CONTROL,1<<3);
         }
         if (yEncoder == EncoderDirection.REVERSED){
             writeInt(Register.DEVICE_CONTROL,1<<2);

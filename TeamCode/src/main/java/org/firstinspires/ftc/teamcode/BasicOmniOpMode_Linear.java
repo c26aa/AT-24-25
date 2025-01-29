@@ -107,9 +107,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
 
 
-            double leftFrontPower = axial - lateral + yaw;
+            double leftFrontPower = axial + lateral + yaw;
             double rightFrontPower = axial - lateral - yaw;
-            double leftBackPower = axial + lateral + yaw;
+            double leftBackPower = axial - lateral + yaw;
             double rightBackPower = axial + lateral - yaw;
 
             max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
@@ -159,33 +159,29 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 //            int lift_max_left = 435;
 //            int lift_min_left = 0;
 
-            if(gamepad2.dpad_up || gamepad2.dpad_down) {
+            if (gamepad2.dpad_up || gamepad2.dpad_down) {
                 useLiftEncoder = false;
-            }else if (gamepad2.dpad_right || gamepad2.dpad_left){
+            } else if (gamepad2.dpad_right || gamepad2.dpad_left) {
                 useLiftEncoder = true;
             }
 
             if (useLiftEncoder) {
                 if (gamepad2.dpad_right) {// set lift targets
-                    lift_target = 1000;
+                    lift_target = 430;
                     // Move lift up using encoders
                 } else if (gamepad2.dpad_left) {
-                    lift_target = 420;
+                    lift_target = 250;
                     // Move lift down using encoders
                 }
                 //NOTE TO SELF: IMPLEMENT MORE ROBUST CORRECTION MECHANISM
-                if (lift_target<lift_left.getCurrentPosition()+15){
+                if (lift_target > lift_left.getCurrentPosition() + 15) {
                     lift_left.setPower(.7);
-                }
-                else if (lift_target>lift_left.getCurrentPosition()-15){
+                } else if (lift_target < lift_left.getCurrentPosition() - 15) {
                     lift_left.setPower(-.7);
-                }
-                else{
+                } else {
                     lift_left.setPower(0);
                 }
-
-            }
-            if (gamepad2.dpad_up && lift_left.getCurrentPosition()<1500) {//scissor lift
+            } else if (gamepad2.dpad_up && lift_left.getCurrentPosition() < 1400) {//scissor lift
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
                 lift_left.setPower(lift_power_left);
@@ -194,7 +190,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 telemetry.addData("Lift encoder value", lift_left.getCurrentPosition());
                 telemetry.addData("Right Lift Power", lift_right.getPower());
                 telemetry.update();
-            } else if (gamepad2.dpad_down && lift_left.getCurrentPosition()>30) {
+            } else if (gamepad2.dpad_down && lift_left.getCurrentPosition() > 30) {
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
                 lift_left.setPower(-lift_power_left);
@@ -246,41 +242,35 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 sleep(500);
                 claw.setPosition(0.55);
                 top_arm.setPosition(0.1);
-//                lift_left.setTargetPosition(lift_left.getCurrentPosition() + 500); // find right encoder value
-//                lift_left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                telemetry.addLine("encoder mode inside function.");
-//                lift_left.setPower(0.5);
-//                lift_right.setPower(lift_left.getPower());
-//                while (lift_left.isBusy()) {
-//                    sleep(10000000);
-//                }
-//                lift_left.setPower(0);
-//                lift_right.setPower(0);
-//                top_arm.setPosition(0.2);
+//                lift_target= 1450;
+//                useLiftEncoder = true;
+//                sleep(2000);
+                top_arm.setPosition(0.3);
+
 
             }
 
 
             if (gamepad2.right_bumper) {//close
-                claw.setPosition(0.93);//95
+                claw.setPosition(0.91);//95
             }
             if (gamepad2.left_bumper) {//open
                 claw.setPosition(0.55);
 
             }
 
-            if (gamepad2.left_stick_x > 0.2){
-                bar_left.setPosition(0.61);
-                bar_right.setPosition(0.55);
-                left_right_hinge.setPosition(0.5);
-                up_down_hinge.setPosition(0.2);
-            }
-            if (gamepad2.left_stick_x < -0.2){
-                bar_left.setPosition(0.61);
-                bar_right.setPosition(0.55);
-                left_right_hinge.setPosition(0.9);
-                up_down_hinge.setPosition(0.2);
-            }
+//            if (gamepad2.left_stick_x > 0.2){
+//                bar_left.setPosition(0.61);
+//                bar_right.setPosition(0.55);
+//                left_right_hinge.setPosition(0.5);
+//                up_down_hinge.setPosition(0.2);
+//            }
+//            if (gamepad2.left_stick_x < -0.2){
+//                bar_left.setPosition(0.61);
+//                bar_right.setPosition(0.55);
+//                left_right_hinge.setPosition(0.9);
+//                up_down_hinge.setPosition(0.2);
+//            }
 
 
             int lift_encoder_value = lift_left.getCurrentPosition();
@@ -328,7 +318,32 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             }
             if (gamepad1.dpad_left) {
-                top_arm.setPosition(0.2);//for bucket
+                top_arm.setPosition(0.3);//for bucket
+
+            }
+            if (gamepad1.a) {
+                useLiftEncoder = true;
+                lift_target = lift_left.getCurrentPosition() + 200; // Set the lift target
+
+                // Open the claw after a short delay (if needed)
+                new Thread(() -> {
+                    sleep(1000); // Adjust this delay if necessary
+                    outtake_claw.setPosition(0.2);
+                    sleep(1000); // Adjust this delay if necessary
+                    top_arm.setPosition(0.1);
+                }).start();
+            }
+            if (gamepad1.y) {
+                bar_left.setPosition(0.4);
+                bar_right.setPosition(0.76);
+                left_right_hinge.setPosition(0.72);
+                up_down_hinge.setPosition(0.5);
+                outtake_claw.setPosition(0.45);
+                useLiftEncoder = true;
+                lift_target = lift_left.getCurrentPosition() + 130;
+                sleep(2000);
+                top_arm.setPosition(0.8);
+
 
             }
 
