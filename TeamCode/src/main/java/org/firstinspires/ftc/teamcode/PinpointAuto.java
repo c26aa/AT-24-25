@@ -74,31 +74,75 @@ public class PinpointAuto extends LinearOpMode {
 
     double oldTime = 0;
 
-    // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor lf = null;
-    private DcMotor lb = null;
-    private DcMotor rf = null;
-    private DcMotor rb = null;
+    private double currentPosition = 0.8;
+    private double currentPosition1 = 0.3; // Start the servo at the middle position
+    private static final double CHANGE_AMOUNT = 0.005;
+    public boolean useLiftEncoder = false;
+    public int lift_target = 0;
 
-    private CRServo intake1 = null; //port 5 control hub.
-    private CRServo intake2 = null; //port 0 exp hub.
-    private Servo wrist1 = null; //port 1 expansion hub. right
-    private Servo wrist2 = null; //port 4 control hub. left
-    private Servo shoulder1 = null; //port 2 control hub. right
-    private Servo shoulder2 = null; //port 3 control hub. left
-    static final double WRIST1_DOWN = .75;
-    static final double WRIST1_UP = 0.2;
 
-    //TODO: FIND POSITIONS wrist 2
-    static final double WRIST2_DOWN = 0.675;
-    static final double WRIST2_UP = 0.2;
+    // Declare OpMode members for each of the 4 motors.
+    private final ElapsedTime runtime = new ElapsedTime();
+    private DcMotor leftFrontDrive = null;
+    private DcMotor leftBackDrive = null;
+    private DcMotor rightFrontDrive = null;
+    private DcMotor rightBackDrive = null;
+    private Servo slide_left = null;
+    private Servo slide_right = null;
+    private Servo bar_left = null;
+    private Servo bar_right = null;
+    private Servo left_right_hinge = null;
+    private Servo up_down_hinge = null;
+    private Servo claw = null;
+    //    private CRServo claw = null;
+    private Servo top_arm = null;
+    private Servo outtake_claw = null;
+    private DcMotor lift_left = null;
+    private DcMotor lift_right = null;
 
-    static final double INTAKE_PWR = 0.95;
-
+    // Add variables for slow mode
+    private boolean slowMode = false;
+    private final double SLOW_MODE_FACTOR = 0.25; // Adjust this value to change the slow mode speed
 
     @Override
     public void runOpMode() {
+        leftFrontDrive = hardwareMap.get(DcMotor.class, "lf");
+        leftBackDrive = hardwareMap.get(DcMotor.class, "lb");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "rf");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "rb");
+        lift_left = hardwareMap.get(DcMotor.class, "scl"); //left lift
+        lift_right = hardwareMap.get(DcMotor.class, "scr"); // right lift
+        slide_left = hardwareMap.get(Servo.class, "sll");
+        slide_right = hardwareMap.get(Servo.class, "slr");
+        bar_left = hardwareMap.get(Servo.class, "brl");
+        bar_right = hardwareMap.get(Servo.class, "brr");
+        left_right_hinge = hardwareMap.get(Servo.class, "hlr");
+        up_down_hinge = hardwareMap.get(Servo.class, "hud");
+        claw = hardwareMap.get(Servo.class, "clw");
+//        claw = hardwareMap.get(CRServo.class, "clw");
+        top_arm = hardwareMap.get(Servo.class, "tam");
+        outtake_claw = hardwareMap.get(Servo.class, "ocw");
+
+
+        lift_left.setDirection(DcMotor.Direction.REVERSE);
+        lift_right.setDirection(DcMotor.Direction.REVERSE);
+
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+
+        leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        lift_left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift_right.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift_left.setMode((DcMotor.RunMode.RUN_WITHOUT_ENCODER));
+        lift_right.setMode((DcMotor.RunMode.RUN_WITHOUT_ENCODER));
+        lift_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
@@ -147,34 +191,7 @@ public class PinpointAuto extends LinearOpMode {
         double startTime = System.currentTimeMillis();
 
         // Initialize the drive system variables.
-        lf = hardwareMap.get(DcMotor.class, "leftFront");
-        lb = hardwareMap.get(DcMotor.class, "leftBack");
-        rf = hardwareMap.get(DcMotor.class, "rightFront");
-        rb = hardwareMap.get(DcMotor.class, "rightBack");
 
-        intake1 = hardwareMap.get(CRServo.class, "intake1");
-        intake2 = hardwareMap.get(CRServo.class, "intake2");
-        wrist1 = hardwareMap.get(Servo.class, "wrist1");
-        wrist2 = hardwareMap.get(Servo.class, "wrist2");
-        shoulder1 = hardwareMap.get(Servo.class, "shoulder1");
-        shoulder2 = hardwareMap.get(Servo.class, "shoulder2");
-
-        lf.setDirection(DcMotor.Direction.REVERSE);
-        lb.setDirection(DcMotor.Direction.REVERSE);
-        rf.setDirection(DcMotor.Direction.FORWARD);
-        rb.setDirection(DcMotor.Direction.FORWARD);
-
-
-        lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        wrist1.setPosition(WRIST1_UP);
-        wrist2.setPosition(WRIST2_UP);
-
-        intake2.setPower(0);
-        intake1.setPower(-0);
 
         // Send telemetry message to indicate successful Encoder reset
 
@@ -224,14 +241,14 @@ public class PinpointAuto extends LinearOpMode {
                 String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
                 telemetry.addData("Velocity", velocity);
 
-                intake2.setPower(-INTAKE_PWR*.5);
-                intake1.setPower(INTAKE_PWR*.5);
+
                 while (pos.getX(DistanceUnit.INCH) < 50) {
 
-                    lf.setPower(.4);
-                    lb.setPower(.4);
-                    rb.setPower(.4);
-                    rf.setPower(.4);
+                    leftFrontDrive.setPower(.4);
+                    leftBackDrive.setPower(.4);
+                    rightBackDrive.setPower(.4);
+                    rightFrontDrive.setPower(.4);
+                }
                     odo.update();
                     pos = odo.getPosition();
 
@@ -241,41 +258,41 @@ public class PinpointAuto extends LinearOpMode {
                 }
 
                 //STRAFELEFT THEN FORWARD THEN RIGHT THEN BACK
-                lf.setPower(0);
-                lb.setPower(0);
-                rb.setPower(0);
-                rf.setPower(0);
-//                forwardDrive(.3, 155, pos.getX(DistanceUnit.INCH));
-                if(pos.getX(DistanceUnit.INCH) >=38&& runtime.seconds()<7.0) {
-                    pos = odo.getPosition();
-                    telemetry.addData("test: ", pos.getX(DistanceUnit.INCH));
-                    telemetry.addData("secs: ", runtime.seconds());
-
-                    telemetry.update();
-                    wrist1.setPosition(WRIST1_DOWN);
-                    intake2.setPower(1);
-                    intake1.setPower(-1);
-                    sleep(5000);
+//                lf.setPower(0);
+//                lb.setPower(0);
+//                rb.setPower(0);
+//                rf.setPower(0);
+////                forwardDrive(.3, 155, pos.getX(DistanceUnit.INCH));
+//                if(pos.getX(DistanceUnit.INCH) >=38&& runtime.seconds()<7.0) {
+//                    pos = odo.getPosition();
+//                    telemetry.addData("test: ", pos.getX(DistanceUnit.INCH));
+//                    telemetry.addData("secs: ", runtime.seconds());
+//
+//                    telemetry.update();
+//                    wrist1.setPosition(WRIST1_DOWN);
+//                    intake2.setPower(1);
+//                    intake1.setPower(-1);
+//                    sleep(5000);
 
                 }
-                wrist1.setPosition(WRIST1_UP);
-                intake2.setPower(0);
-                intake1.setPower(0);
-                //straferight
-                while (pos.getX(DistanceUnit.INCH)>36) {
-                    lf.setPower(-.3);
-                    lb.setPower(-.3);
-                    rb.setPower(-.3);
-                    rf.setPower(-.3);
-                    pos = odo.getPosition();
-                    telemetry.addData("backing up, pos: ", pos.getX(DistanceUnit.INCH));
-                    telemetry.addData("secs: ", runtime.seconds());
-                }
-                //strafeleft
-                lf.setPower(0);
-                lb.setPower(0);
-                rb.setPower(0);
-                rf.setPower(0);
+//                wrist1.setPosition(WRIST1_UP);
+//                intake2.setPower(0);
+//                intake1.setPower(0);
+//                //straferight
+//                while (pos.getX(DistanceUnit.INCH)>36) {
+//                    lf.setPower(-.3);
+//                    lb.setPower(-.3);
+//                    rb.setPower(-.3);
+//                    rf.setPower(-.3);
+//                    pos = odo.getPosition();
+//                    telemetry.addData("backing up, pos: ", pos.getX(DistanceUnit.INCH));
+//                    telemetry.addData("secs: ", runtime.seconds());
+//                }
+//                //strafeleft
+//                lf.setPower(0);
+//                lb.setPower(0);
+//                rb.setPower(0);
+//                rf.setPower(0);
 
 
 //                forwardDrive(-.8, 10, pos.getX(DistanceUnit.INCH));
@@ -306,14 +323,14 @@ public class PinpointAuto extends LinearOpMode {
 
                 telemetry.addData("Pinpoint Frequency", odo.getFrequency()); //prints/gets the current refresh rate of the Pinpoint
 
-                telemetry.addData("REV Hub Frequency: ", frequency); //prints the control system refresh rate
+//                telemetry.addData("REV Hub Frequency: ", frequency); //prints the control system refresh rate
                 telemetry.update();
             }
         }
-    }
-    public void forwardDrive(double power, double position, double pos) {
 
-        System.out.println("in forward drive");
+//    public void forwardDrive(double power, double position, double pos) {
+//
+//        System.out.println("in forward drive");
 
 
 
@@ -336,5 +353,3 @@ public class PinpointAuto extends LinearOpMode {
 //                lb.setPower(0);
 //                rb.setPower(0);
 //                rf.setPower(0);
-    }
-}

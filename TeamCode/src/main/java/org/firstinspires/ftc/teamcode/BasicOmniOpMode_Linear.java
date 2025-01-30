@@ -8,13 +8,16 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.Servo;
+import static org.firstinspires.ftc.teamcode.Constants.*;
+
+
 
 @TeleOp(name = "Atomic Tele-Op", group = "Linear OpMode")
 //@Disabled
 public class BasicOmniOpMode_Linear extends LinearOpMode {
 
-    private double currentPosition = 0.27;
-    private double currentPosition1 = 0.15; // Start the servo at the middle position
+    private double currentPosition = 0.8;
+    private double currentPosition1 = 0.3; // Start the servo at the middle position
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;

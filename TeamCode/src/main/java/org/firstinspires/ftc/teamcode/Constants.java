@@ -28,4 +28,5 @@ public class Constants {
     static final double SLIDES_MAX = 0.75;
 
 
+
 }
