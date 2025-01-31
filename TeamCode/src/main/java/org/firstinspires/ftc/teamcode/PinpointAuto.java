@@ -65,7 +65,7 @@ For support, contact tech@gobilda.com
 -Ethan Doak
  */
 
-@Autonomous(name="auto test", group="Linear OpMode")
+@Autonomous(name = "auto test", group = "Linear OpMode")
 //@Disabled
 
 public class PinpointAuto extends LinearOpMode {
@@ -79,6 +79,8 @@ public class PinpointAuto extends LinearOpMode {
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
+    boolean moveStuff = true;
+    boolean liftPosition = true;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -196,10 +198,16 @@ public class PinpointAuto extends LinearOpMode {
         // Send telemetry message to indicate successful Encoder reset
 
         // Wait for the game to start (driver presses PLAY)
+
+//        bar_left.setPosition(0.61);
+//        bar_right.setPosition(0.55);
+//        left_right_hinge.setPosition(0.72);
+//        up_down_hinge.setPosition(0.3);
+//        top_arm.setPosition(0.1);
+        liftPosition = true;
         waitForStart();
 
         while (opModeIsActive()) {
-
             telemetry.addData("Status", "Initialized");
             telemetry.addData("X offset", odo.getXOffset());
             telemetry.addData("Y offset", odo.getYOffset());
@@ -211,102 +219,138 @@ public class PinpointAuto extends LinearOpMode {
             waitForStart();
             resetRuntime();
 
+            // Run until the end of the match (driver presses STOP)
+            if (moveStuff) {
+                top_arm.setPosition(0.8);
+                outtake_claw.setPosition(.45);
+                moveStuff = false;
+            }
 
-            // run until the end of the match (driver presses STOP)
-            while (opModeIsActive()) {
+            // Request an update from the Pinpoint odometry computer
+            odo.update();
 
-            /*
-            Request an update from the Pinpoint odometry computer. This checks almost all outputs
-            from the device in a single I2C read.
-             */
+            double newTime = getRuntime();
+            double loopTime = newTime - oldTime;
+            double frequency = 1 / loopTime;
+            oldTime = newTime;
+
+            // Get the current Position (x & y in mm, and heading in degrees) of the robot
+            Pose2D pos = odo.getPosition();
+            String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("Position", data);
+
+            // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+            Pose2D vel = odo.getVelocity();
+            String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("Velocity", velocity);
+
+            // Set servo positions
+            slide_left.setPosition(0.8);
+            slide_right.setPosition(0.3);
+
+            // Lift control logic
+            if (liftPosition) {
+                telemetry.addLine("hello atticus");
+                useLiftEncoder = true;
+                lift_target = 470;
+                liftPosition = false;
+            }
+
+//            if (lift_target > lift_left.getCurrentPosition() + 15) {
+//                lift_left.setPower(.7);
+//            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+//                lift_left.setPower(-.7);
+//            } else {
+//                lift_left.setPower(0);
+//            }
+//            lift_right.setPower(lift_left.getPower());
+
+            // Drive motor control logic
+            while (pos.getX(DistanceUnit.INCH) < 29.5 && opModeIsActive()) {
+                telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
+                // Update the lift motors while driving
+                if (lift_target > lift_left.getCurrentPosition() + 15) {
+                    lift_left.setPower(.8);
+                } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                    lift_left.setPower(-.8);
+                } else {
+                    lift_left.setPower(0);
+                }
+
+                lift_right.setPower(lift_left.getPower());
+                // Drive the robot forward
+                leftFrontDrive.setPower(.4);
+                leftBackDrive.setPower(.4);
+                rightBackDrive.setPower(.4);
+                rightFrontDrive.setPower(.4);
+
+                // Update the position
+                pos = odo.getPosition();
                 odo.update();
+            }
 
-                double newTime = getRuntime();
-                double loopTime = newTime - oldTime;
-                double frequency = 1 / loopTime;
-                oldTime = newTime;
+            // Stop the drive motors
+            leftFrontDrive.setPower(0);
+            leftBackDrive.setPower(0);
+            rightBackDrive.setPower(0);
+            rightFrontDrive.setPower(0);
 
+            // Wait for 2 seconds
+            sleep(2000);
+            // Update the lift target after driving
+            if (!liftPosition) {
+                telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+                telemetry.update();
+                useLiftEncoder = true;
+                lift_target = 620;
+            }
 
-            /*
-            gets the current Position (x & y in mm, and heading in degrees) of the robot, and prints it.
-             */
-                Pose2D pos = odo.getPosition();
-                String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-                telemetry.addData("Position", data);
-
-            /*
-            gets the current Velocity (x & y in mm/sec and heading in degrees/sec) and prints it.
-             */
-                Pose2D vel = odo.getVelocity();
-                String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-                telemetry.addData("Velocity", velocity);
-
-
-                while (pos.getX(DistanceUnit.INCH) < 50) {
-
-                    leftFrontDrive.setPower(.4);
-                    leftBackDrive.setPower(.4);
-                    rightBackDrive.setPower(.4);
-                    rightFrontDrive.setPower(.4);
+            top_arm.setPosition(.2);
+            while (lift_target > lift_left.getCurrentPosition() + 15) {
+                telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+                telemetry.update();
+                if (lift_target > lift_left.getCurrentPosition() + 15) {
+                    lift_left.setPower(.8);
+                } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                    lift_left.setPower(-.7);
+                } else {
+                    lift_left.setPower(0);
                 }
-                    odo.update();
-                    pos = odo.getPosition();
+                lift_right.setPower(lift_left.getPower());
+            }
 
-                    telemetry.addData("position: ", pos.getX(DistanceUnit.INCH));
-                    telemetry.update();
+            // Adjust the outtake claw and top arm positions
+            sleep(1000);
+            outtake_claw.setPosition(.2);
+            top_arm.setPosition(.1);
+            lift_target = 100;
 
+            while (lift_target < lift_left.getCurrentPosition() + 15) {
+                telemetry.addLine("shivatron");
+                if (lift_target > lift_left.getCurrentPosition() + 15) {
+                    lift_left.setPower(.8);
+                } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                    lift_left.setPower(-.7);
+                } else {
+                    lift_left.setPower(0);
                 }
+                lift_right.setPower(lift_left.getPower());
+            }
 
-                //STRAFELEFT THEN FORWARD THEN RIGHT THEN BACK
-//                lf.setPower(0);
-//                lb.setPower(0);
-//                rb.setPower(0);
-//                rf.setPower(0);
-////                forwardDrive(.3, 155, pos.getX(DistanceUnit.INCH));
-//                if(pos.getX(DistanceUnit.INCH) >=38&& runtime.seconds()<7.0) {
-//                    pos = odo.getPosition();
-//                    telemetry.addData("test: ", pos.getX(DistanceUnit.INCH));
-//                    telemetry.addData("secs: ", runtime.seconds());
-//
-//                    telemetry.update();
-//                    wrist1.setPosition(WRIST1_DOWN);
-//                    intake2.setPower(1);
-//                    intake1.setPower(-1);
-//                    sleep(5000);
-
-                }
-//                wrist1.setPosition(WRIST1_UP);
-//                intake2.setPower(0);
-//                intake1.setPower(0);
-//                //straferight
-//                while (pos.getX(DistanceUnit.INCH)>36) {
-//                    lf.setPower(-.3);
-//                    lb.setPower(-.3);
-//                    rb.setPower(-.3);
-//                    rf.setPower(-.3);
-//                    pos = odo.getPosition();
-//                    telemetry.addData("backing up, pos: ", pos.getX(DistanceUnit.INCH));
-//                    telemetry.addData("secs: ", runtime.seconds());
-//                }
-//                //strafeleft
-//                lf.setPower(0);
-//                lb.setPower(0);
-//                rb.setPower(0);
-//                rf.setPower(0);
+            if (lift_target > lift_left.getCurrentPosition() + 15){
+                lift_left.setPower(0);
+            }
 
 
-//                forwardDrive(-.8, 10, pos.getX(DistanceUnit.INCH));
-//                strafeLeft(-.8, 40, pos.getY(DistanceUnit.INCH)); //strafe right
-//                intake.setPower(-.8);
-//                forwardDrive(-.6, 5, pos.getX(DistanceUnit.INCH));
-//                wrist1.setPosition(WRIST1_UP);
-//                strafeLeft(.8, 40, pos.getY(DistanceUnit.INCH));
-//                wrist1.setPosition(WRIST1_DOWN);
-//                intake.setPower(.8);
-//                wrist1.setPosition(WRIST1_UP);
-//                intake.setPower(0);
-//                forwardDrive(-.8, 175, pos.getX(DistanceUnit.INCH));
-
+            // Update telemetry
+            telemetry.addData("position: ", pos.getX(DistanceUnit.INCH));
+            telemetry.addData("Lift Left Power", lift_left.getPower());
+            telemetry.addData("Lift Right Power", lift_right.getPower());
+            telemetry.addData("Lift Left Position", lift_left.getCurrentPosition());
+            telemetry.addData("Lift Right Position", lift_right.getCurrentPosition());
+            telemetry.update();
+            resetRuntime();
+        }
 
 
 
@@ -319,22 +363,21 @@ public class PinpointAuto extends LinearOpMode {
             FAULT_X_POD_NOT_DETECTED - The device does not detect an X pod plugged in
             FAULT_Y_POD_NOT_DETECTED - The device does not detect a Y pod plugged in
             */
-                telemetry.addData("Status", odo.getDeviceStatus());
+        telemetry.addData("Status", odo.getDeviceStatus());
 
-                telemetry.addData("Pinpoint Frequency", odo.getFrequency()); //prints/gets the current refresh rate of the Pinpoint
+        telemetry.addData("Pinpoint Frequency", odo.getFrequency()); //prints/gets the current refresh rate of the Pinpoint
 
 //                telemetry.addData("REV Hub Frequency: ", frequency); //prints the control system refresh rate
-                telemetry.update();
-            }
-        }
+        telemetry.update();
+    }
+}
 
 //    public void forwardDrive(double power, double position, double pos) {
 //
 //        System.out.println("in forward drive");
 
 
-
-        //wait until reaches position
+//wait until reaches position
 //                while (pos < position && opModeIsActive()) {
 //                    lf.setPower(power);
 //                    lb.setPower(power);
