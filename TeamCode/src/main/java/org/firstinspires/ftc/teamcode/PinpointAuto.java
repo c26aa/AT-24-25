@@ -81,6 +81,7 @@ public class PinpointAuto extends LinearOpMode {
     public int lift_target = 0;
     boolean moveStuff = true;
     boolean liftPosition = true;
+    boolean placed = true;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -105,7 +106,108 @@ public class PinpointAuto extends LinearOpMode {
     // Add variables for slow mode
     private boolean slowMode = false;
     private final double SLOW_MODE_FACTOR = 0.25; // Adjust this value to change the slow mode speed
+public void placeSpecimen(){
+    odo.update();
 
+    double newTime = getRuntime();
+    double loopTime = newTime - oldTime;
+    double frequency = 1 / loopTime;
+    oldTime = newTime;
+
+    // Get the current Position (x & y in mm, and heading in degrees) of the robot
+    Pose2D pos = odo.getPosition();
+    String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+    telemetry.addData("Position", data);
+
+    // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+    Pose2D vel = odo.getVelocity();
+    String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+    telemetry.addData("Velocity", velocity);
+
+
+    // Lift control logic
+    if (liftPosition) {
+        useLiftEncoder = true;
+        lift_target = 490;
+        liftPosition = false;
+    }
+
+    // Drive motor control logic
+    while (pos.getX(DistanceUnit.INCH) < 29.5 && opModeIsActive()) {
+        telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
+        // Update the lift motors while driving
+        if (lift_target > lift_left.getCurrentPosition() + 15) {
+            lift_left.setPower(.8);
+        } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+            lift_left.setPower(-.8);
+        } else {
+            lift_left.setPower(0);
+        }
+
+        lift_right.setPower(lift_left.getPower());
+        // Drive the robot forward
+        leftFrontDrive.setPower(.4);
+        leftBackDrive.setPower(.4);
+        rightBackDrive.setPower(.4);
+        rightFrontDrive.setPower(.4);
+
+        // Update the position
+        pos = odo.getPosition();
+        odo.update();
+    }
+
+    // Stop the drive motors
+    leftFrontDrive.setPower(0);
+    leftBackDrive.setPower(0);
+    rightBackDrive.setPower(0);
+    rightFrontDrive.setPower(0);
+
+    // Wait for 2 seconds
+    sleep(200);
+    // Update the lift target after driving
+    if (!liftPosition) {
+        telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+        telemetry.update();
+        useLiftEncoder = true;
+        lift_target = 620;
+    }
+
+    top_arm.setPosition(.2);
+    while (lift_target > lift_left.getCurrentPosition() + 15) {
+        telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+        telemetry.update();
+        if (lift_target > lift_left.getCurrentPosition() + 15) {
+            lift_left.setPower(.8);
+        } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+            lift_left.setPower(-.7);
+        } else {
+            lift_left.setPower(0);
+        }
+        lift_right.setPower(lift_left.getPower());
+    }
+
+    // Adjust the outtake claw and top arm positions
+    sleep(500);
+    outtake_claw.setPosition(.2);
+    top_arm.setPosition(.1);
+    lift_target = 0;
+
+    while (lift_target < lift_left.getCurrentPosition() + 15) {
+        telemetry.addLine("shivatron");
+        if (lift_target > lift_left.getCurrentPosition() + 15) {
+            lift_left.setPower(.8);
+        } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+            lift_left.setPower(-.6);
+        } else {
+            lift_left.setPower(0);
+        }
+        lift_right.setPower(lift_left.getPower());
+    }
+
+    if (lift_target > lift_left.getCurrentPosition() + 15){
+        lift_left.setPower(0);
+    }
+}
     @Override
     public void runOpMode() {
         leftFrontDrive = hardwareMap.get(DcMotor.class, "lf");
@@ -220,11 +322,13 @@ public class PinpointAuto extends LinearOpMode {
             resetRuntime();
 
             // Run until the end of the match (driver presses STOP)
+
             if (moveStuff) {
                 top_arm.setPosition(0.8);
                 outtake_claw.setPosition(.45);
                 moveStuff = false;
             }
+
 
             // Request an update from the Pinpoint odometry computer
             odo.update();
@@ -248,101 +352,74 @@ public class PinpointAuto extends LinearOpMode {
             slide_left.setPosition(0.8);
             slide_right.setPosition(0.3);
 
-            // Lift control logic
-            if (liftPosition) {
-                telemetry.addLine("hello atticus");
-                useLiftEncoder = true;
-                lift_target = 470;
-                liftPosition = false;
+            if(placed){
+                placeSpecimen();
+                placed = false;
             }
 
-//            if (lift_target > lift_left.getCurrentPosition() + 15) {
-//                lift_left.setPower(.7);
-//            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-//                lift_left.setPower(-.7);
-//            } else {
-//                lift_left.setPower(0);
-//            }
-//            lift_right.setPower(lift_left.getPower());
-
-            // Drive motor control logic
-            while (pos.getX(DistanceUnit.INCH) < 29.5 && opModeIsActive()) {
-                telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
-                // Update the lift motors while driving
-                if (lift_target > lift_left.getCurrentPosition() + 15) {
-                    lift_left.setPower(.8);
-                } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                    lift_left.setPower(-.8);
-                } else {
-                    lift_left.setPower(0);
+            while (pos.getHeading(AngleUnit.DEGREES) > -89.9 || pos.getHeading(AngleUnit.DEGREES) < -90.1){
+                telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
+                telemetry.update();
+                if (pos.getHeading(AngleUnit.DEGREES) > -89.9) {
+                    leftFrontDrive.setPower(0.4);
+                    leftBackDrive.setPower(0.4);
+                    rightBackDrive.setPower(-0.4);
+                    rightFrontDrive.setPower(-0.4);
+                } if (pos.getHeading(AngleUnit.DEGREES) < -90.1) {
+                    leftFrontDrive.setPower(-0.3);
+                    leftBackDrive.setPower(-0.3);
+                    rightBackDrive.setPower(0.3);
+                    rightFrontDrive.setPower(0.3);
                 }
-
-                lift_right.setPower(lift_left.getPower());
-                // Drive the robot forward
-                leftFrontDrive.setPower(.4);
-                leftBackDrive.setPower(.4);
-                rightBackDrive.setPower(.4);
-                rightFrontDrive.setPower(.4);
-
-                // Update the position
                 pos = odo.getPosition();
                 odo.update();
             }
 
-            // Stop the drive motors
-            leftFrontDrive.setPower(0);
-            leftBackDrive.setPower(0);
-            rightBackDrive.setPower(0);
-            rightFrontDrive.setPower(0);
-
-            // Wait for 2 seconds
-            sleep(2000);
-            // Update the lift target after driving
-            if (!liftPosition) {
-                telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+            while (pos.getX(DistanceUnit.INCH) > 27){
+                telemetry.addData("heading: ", pos.getY(DistanceUnit.INCH));
+                telemetry.addData("heading: ", pos.getX(DistanceUnit.INCH));
                 telemetry.update();
-                useLiftEncoder = true;
-                lift_target = 620;
+//                double leftFrontPower = axial + lateral + yaw;
+//                double rightFrontPower = axial - lateral - yaw;
+//                double leftBackPower = axial - lateral + yaw;
+//                double rightBackPower = axial + lateral - yaw;
+                leftFrontDrive.setPower(0.4);
+                leftBackDrive.setPower(-0.4);
+                rightBackDrive.setPower(0.4);
+                rightFrontDrive.setPower(-0.4);
+                pos = odo.getPosition();
+                odo.update();
             }
 
-            top_arm.setPosition(.2);
-            while (lift_target > lift_left.getCurrentPosition() + 15) {
-                telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+            leftFrontDrive.setPower(0.0);
+            leftBackDrive.setPower(0.0);
+            rightBackDrive.setPower(0.0);
+            rightFrontDrive.setPower(0.0);
+
+            while (pos.getX(DistanceUnit.INCH) > -30){
+                telemetry.addData("heading: ", pos.getY(DistanceUnit.INCH));
+                telemetry.addData("heading: ", pos.getX(DistanceUnit.INCH));
                 telemetry.update();
-                if (lift_target > lift_left.getCurrentPosition() + 15) {
-                    lift_left.setPower(.8);
-                } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                    lift_left.setPower(-.7);
-                } else {
-                    lift_left.setPower(0);
-                }
-                lift_right.setPower(lift_left.getPower());
+                leftFrontDrive.setPower(0.4);
+                leftBackDrive.setPower(0.4);
+                rightBackDrive.setPower(0.4);
+                rightFrontDrive.setPower(0.4);
+                pos = odo.getPosition();
+                odo.update();
             }
+            leftFrontDrive.setPower(0.0);
+            leftBackDrive.setPower(0.0);
+            rightBackDrive.setPower(0.0);
+            rightFrontDrive.setPower(0.0);
 
-            // Adjust the outtake claw and top arm positions
-            sleep(1000);
-            outtake_claw.setPosition(.2);
-            top_arm.setPosition(.1);
-            lift_target = 100;
 
-            while (lift_target < lift_left.getCurrentPosition() + 15) {
-                telemetry.addLine("shivatron");
-                if (lift_target > lift_left.getCurrentPosition() + 15) {
-                    lift_left.setPower(.8);
-                } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                    lift_left.setPower(-.7);
-                } else {
-                    lift_left.setPower(0);
-                }
-                lift_right.setPower(lift_left.getPower());
-            }
 
-            if (lift_target > lift_left.getCurrentPosition() + 15){
-                lift_left.setPower(0);
-            }
+
+
 
 
             // Update telemetry
+            telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
             telemetry.addData("position: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Lift Left Power", lift_left.getPower());
             telemetry.addData("Lift Right Power", lift_right.getPower());
