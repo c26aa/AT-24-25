@@ -357,60 +357,91 @@ public void placeSpecimen(){
                 placed = false;
             }
 
-            while (pos.getHeading(AngleUnit.DEGREES) > -89.9 || pos.getHeading(AngleUnit.DEGREES) < -90.1){
-                telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
-                telemetry.update();
-                if (pos.getHeading(AngleUnit.DEGREES) > -89.9) {
+            boolean strafed = false;
+
+            if (!strafed) {
+                strafed = true;
+                while (pos.getHeading(AngleUnit.DEGREES) > -89.9 || pos.getHeading(AngleUnit.DEGREES) < -90.1) {
+                    telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
+                    telemetry.update();
+                    if (pos.getHeading(AngleUnit.DEGREES) > -89.9) {
+                        leftFrontDrive.setPower(0.4);
+                        leftBackDrive.setPower(0.4);
+                        rightBackDrive.setPower(-0.4);
+                        rightFrontDrive.setPower(-0.4);
+                    }
+                    if (pos.getHeading(AngleUnit.DEGREES) < -90.1) {
+                        leftFrontDrive.setPower(-0.2);
+                        leftBackDrive.setPower(-0.2);
+                        rightBackDrive.setPower(0.2);
+                        rightFrontDrive.setPower(0.2);
+                    }
+                    pos = odo.getPosition();
+                    odo.update();
+                }
+                leftFrontDrive.setPower(0.0);
+                leftBackDrive.setPower(0.0);
+                rightBackDrive.setPower(0.0);
+                rightFrontDrive.setPower(0.0);
+
+                while (pos.getX(DistanceUnit.INCH) < 40) {
+                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
+                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
+                    telemetry.update();
+                    leftFrontDrive.setPower(0.4);
+                    leftBackDrive.setPower(-0.4);
+                    rightBackDrive.setPower(0.4);
+                    rightFrontDrive.setPower(-0.4);
+                    pos = odo.getPosition();
+                    odo.update();
+                }
+
+                leftFrontDrive.setPower(0.0);
+                leftBackDrive.setPower(0.0);
+                rightBackDrive.setPower(0.0);
+                rightFrontDrive.setPower(0.0);
+
+                while (pos.getY(DistanceUnit.INCH) > -32) {
+                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
+                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
+                    telemetry.update();
                     leftFrontDrive.setPower(0.4);
                     leftBackDrive.setPower(0.4);
-                    rightBackDrive.setPower(-0.4);
-                    rightFrontDrive.setPower(-0.4);
-                } if (pos.getHeading(AngleUnit.DEGREES) < -90.1) {
-                    leftFrontDrive.setPower(-0.3);
-                    leftBackDrive.setPower(-0.3);
-                    rightBackDrive.setPower(0.3);
-                    rightFrontDrive.setPower(0.3);
+                    rightBackDrive.setPower(0.4);
+                    rightFrontDrive.setPower(0.4);
+                    pos = odo.getPosition();
+                    odo.update();
                 }
-                pos = odo.getPosition();
-                odo.update();
-            }
 
-            while (pos.getX(DistanceUnit.INCH) > 27){
-                telemetry.addData("heading: ", pos.getY(DistanceUnit.INCH));
-                telemetry.addData("heading: ", pos.getX(DistanceUnit.INCH));
-                telemetry.update();
-//                double leftFrontPower = axial + lateral + yaw;
-//                double rightFrontPower = axial - lateral - yaw;
-//                double leftBackPower = axial - lateral + yaw;
-//                double rightBackPower = axial + lateral - yaw;
-                leftFrontDrive.setPower(0.4);
-                leftBackDrive.setPower(-0.4);
-                rightBackDrive.setPower(0.4);
-                rightFrontDrive.setPower(-0.4);
-                pos = odo.getPosition();
-                odo.update();
-            }
+                while (pos.getX(DistanceUnit.INCH) > 20) {
+                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
+                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
+                    telemetry.update();
+                    leftFrontDrive.setPower(-0.4);
+                    leftBackDrive.setPower(0.4);
+                    rightBackDrive.setPower(-0.4);
+                    rightFrontDrive.setPower(0.4);
+                    pos = odo.getPosition();
+                    odo.update();
+                }
 
-            leftFrontDrive.setPower(0.0);
-            leftBackDrive.setPower(0.0);
-            rightBackDrive.setPower(0.0);
-            rightFrontDrive.setPower(0.0);
+                while (pos.getY(DistanceUnit.INCH) > -42) {
+                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
+                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
+                    telemetry.update();
+                    leftFrontDrive.setPower(0.4);
+                    leftBackDrive.setPower(0.4);
+                    rightBackDrive.setPower(0.4);
+                    rightFrontDrive.setPower(0.4);
+                    pos = odo.getPosition();
+                    odo.update();
+                }
 
-            while (pos.getX(DistanceUnit.INCH) > -30){
-                telemetry.addData("heading: ", pos.getY(DistanceUnit.INCH));
-                telemetry.addData("heading: ", pos.getX(DistanceUnit.INCH));
-                telemetry.update();
-                leftFrontDrive.setPower(0.4);
-                leftBackDrive.setPower(0.4);
-                rightBackDrive.setPower(0.4);
-                rightFrontDrive.setPower(0.4);
-                pos = odo.getPosition();
-                odo.update();
+                leftFrontDrive.setPower(0.0);
+                leftBackDrive.setPower(0.0);
+                rightBackDrive.setPower(0.0);
+                rightFrontDrive.setPower(0.0);
             }
-            leftFrontDrive.setPower(0.0);
-            leftBackDrive.setPower(0.0);
-            rightBackDrive.setPower(0.0);
-            rightFrontDrive.setPower(0.0);
 
 
 
