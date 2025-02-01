@@ -78,13 +78,17 @@ public class PinpointAuto extends LinearOpMode {
     private double currentPosition1 = 0.3; // Start the servo at the middle position
     private int blockNum = 1;
     private int numSamp = 1;
+    private int sampX = 48;
+    private  int dropX = 10;
+    private int pickupX = 8; // way to high right now to not break the claw
+    private int pickupY = -47;
+    private int placementOffset = 3;
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
     boolean moveStuff = true;
     boolean liftPosition = true;
-    boolean placed = false;
-    boolean strafed = false;
+    boolean done = false;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -146,6 +150,13 @@ public class PinpointAuto extends LinearOpMode {
         rightFrontDrive.setPower(0.4);
     }
 
+    public void pickupClawAction(){
+        sleep(300);
+        outtake_claw.setPosition(.45);
+        sleep(300);
+        top_arm.setPosition(0.8);
+    }
+
 
     public void placeSpecimen(){
         odo.update();
@@ -197,7 +208,7 @@ public class PinpointAuto extends LinearOpMode {
         // Stop the drive motors
         off();
 
-        // Wait for 2 seconds
+        // Wait for .2 seconds
         sleep(200);
         // Update the lift target after driving
         if (!liftPosition) {
@@ -207,8 +218,9 @@ public class PinpointAuto extends LinearOpMode {
             lift_target = 620;
         }
 
+        //  pull claw back and lift scissor lift to place sample
         top_arm.setPosition(.2);
-        while (lift_target > lift_left.getCurrentPosition() + 15) {
+        while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
             telemetry.update();
             if (lift_target > lift_left.getCurrentPosition() + 15) {
@@ -222,12 +234,13 @@ public class PinpointAuto extends LinearOpMode {
         }
 
         // Adjust the outtake claw and top arm positions
-        sleep(500);
+        sleep(200);
         outtake_claw.setPosition(.2);
         top_arm.setPosition(.1);
         lift_target = 0;
 
-        while (lift_target < lift_left.getCurrentPosition() + 15) {
+        //  Lower scissor lift
+        while (lift_target < lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
             telemetry.addLine("shivatron");
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.8);
@@ -263,79 +276,225 @@ public class PinpointAuto extends LinearOpMode {
         String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Velocity", velocity);
 
-    //    rotate robot 90 degrees
-        while (pos.getHeading(AngleUnit.DEGREES) > -89.9 || pos.getHeading(AngleUnit.DEGREES) < -90.1) {
-            telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
-            telemetry.update();
-            if (pos.getHeading(AngleUnit.DEGREES) > -89.9) {
-                leftFrontDrive.setPower(0.4);
-                leftBackDrive.setPower(0.4);
-                rightBackDrive.setPower(-0.4);
-                rightFrontDrive.setPower(-0.4);
-            }
-            if (pos.getHeading(AngleUnit.DEGREES) < -90.1) {
-                leftFrontDrive.setPower(-0.2);
-                leftBackDrive.setPower(-0.2);
-                rightBackDrive.setPower(0.2);
-                rightFrontDrive.setPower(0.2);
-            }
+        //    reverse closer to wall to avoid hitting the corner of the submersible
+        while (pos.getX(DistanceUnit.INCH) > 22 && opModeIsActive()) {
+            reverse();
+            // Update the position
             pos = odo.getPosition();
             odo.update();
         }
         off();
 
-    //    strafe closer to wall to avoid hitting the corner of the submerssible
-        while (pos.getX(DistanceUnit.INCH) < 40) {
+    //  drive to the lane between the submersible and block
+        while (pos.getY(DistanceUnit.INCH) > -32 && opModeIsActive()) {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
         }
         off();
 
-    //  drive to the lane between the submerssible and block
-        while (pos.getY(DistanceUnit.INCH) > -32) {
-            forward();
-            pos = odo.getPosition();
-            odo.update();
-        }
-        off();
-
     // strafe along side a block to be able to drive behind it next
-        while (pos.getX(DistanceUnit.INCH) > 16) {
-            strafeLeft();
+        while (pos.getX(DistanceUnit.INCH) < sampX && opModeIsActive()) {
+            forward();
             pos = odo.getPosition();
             odo.update();
         }
         off();
 
     //    go directly behind a block
-        while (pos.getY(DistanceUnit.INCH) > -45) {
-            forward();
+        while (pos.getY(DistanceUnit.INCH) > -44 && opModeIsActive()) {
+            strafeRight();
             pos = odo.getPosition();
             odo.update();
         }
         off();
     }
 
-    // next functions that need to be made
-    public void dropOff(){
     //    push sample straight into human player zone (this function will be run 3 times)
+    public void dropOff(){
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        while (pos.getX(DistanceUnit.INCH) > dropX && opModeIsActive()) {
+            reverse();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
     }
 
-    public void dropToSamp(){
     //        take numSamp as an argument and add that distance needed to be covered
     //    go from drop off to the next sample that needs to be pushed (this function will be run 2 times)
+    public void dropToSamp(){
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        // strafe along side a block to be able to drive behind it next
+        while (pos.getX(DistanceUnit.INCH) < sampX && opModeIsActive()) {
+            forward();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+        //  drive to the lane between the submersible and block
+        while (pos.getY(DistanceUnit.INCH) > -44 - 10*numSamp && opModeIsActive()) {
+            strafeRight();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
     }
+
+    //     from last block drop off, go to the spot where the human player place the specimen, pick up the specimen
     public void pickupSpecial(){
-//     from last block drop off, go to the spot where the human player place the specimen, pick up the specimen
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+//      back away from last pushed sample
+        while (pos.getX(DistanceUnit.INCH) < dropX+1 && opModeIsActive()) {
+            forward();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+//        align with specimen
+        while (pos.getY(DistanceUnit.INCH) < pickupY && opModeIsActive()) {
+            strafeLeft();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+//        go to specimen at wall
+        while (pos.getX(DistanceUnit.INCH) > pickupX && opModeIsActive()) {
+            reverse();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+//      grab specimen and bring it to place
+        pickupClawAction();
     }
+
+    //        bring specimen from pick up to appropriate distance on the wall
+//       according to blockNum (how many specimens have already been placed)
     public void pickup(){
-//        go to the spot where the human player place the specimen, pick up the specimen
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+//      back away from submersible
+        while (pos.getX(DistanceUnit.INCH) > 20 && opModeIsActive()) {
+            reverse();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+//        align with specimen
+        while (pos.getY(DistanceUnit.INCH) > pickupY && opModeIsActive()) {
+            strafeRight();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+//        go to specimen at wall
+        while (pos.getX(DistanceUnit.INCH) > pickupX && opModeIsActive()) {
+            reverse();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+//      grab specimen and bring it to place
+        pickupClawAction();
     }
 
     public void specStrafe(){
-//        bring specimen from pick up to appropriate distance on the wall
-//       according to blockNum (how many specimens have already been placed)
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        //  align with submersible placement spot
+        while (pos.getY(DistanceUnit.INCH) < -1*placementOffset * blockNum && opModeIsActive()) {
+            strafeLeft();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
     }
 
     @Override
@@ -482,40 +641,50 @@ public class PinpointAuto extends LinearOpMode {
             slide_left.setPosition(0.8);
             slide_right.setPosition(0.3);
 
-            if(!placed){
+            if(!done) {
+                // place preloaded specimen
                 placeSpecimen();
-                placed = true;
                 blockNum += 1;
-            }
 
-            if (!strafed) {
+                // go to first sample and drop it off at human player
                 subToSamp();
-                strafed = true;
+                dropOff();
+
+                // go to second sample and drop it off at human player
+                dropToSamp();
+                dropOff();
+                numSamp += 1; // update that now you need to go to the next sample
+
+                // go to third sample and drop it off at human player
+                dropToSamp();
+                dropOff();
+
+                // place second specimen
+                pickupSpecial(); // go from drop off of last sample to specimen pick up area
+                specStrafe(); // align the second specimen for placement
+                placeSpecimen(); // place the second specimen
+                blockNum += 1; // update how many blocks for alignment
+
+                // place third specimen
+                pickup(); // go from submersible to specimen pick up area
+                specStrafe(); // align the third specimen for placement
+                placeSpecimen(); // place the third specimen
+                blockNum += 1; // update how many blocks for alignment
+
+                // place fourth specimen
+                pickup(); // go from submersible to specimen pick up area
+                specStrafe(); // align the fourth specimen for placement
+                placeSpecimen(); // place the fourth specimen
+                blockNum += 1; // update how many blocks for alignment
+
+                // place fifth specimen
+                pickup(); // go from submersible to specimen pick up area
+                specStrafe(); // align the fourth specimen for placement
+                placeSpecimen(); // place the fourth specimen
+                blockNum += 1; // update how many blocks for alignment
+
+                done = true;
             }
-
-            dropOff(); // drop off first sample
-
-            dropToSamp(); // go from drop off of first sample to second sample
-            dropOff(); // drop off second sample
-            numSamp += 1;
-
-            dropToSamp(); // go from drop off of second sample to third sample
-            dropOff(); // drop off last sample
-
-            pickupSpecial(); // go from drop off of last sample to specimen pick up area
-            specStrafe(); // align the second specimen for placement
-            placeSpecimen(); // place the second specimen
-            blockNum += 1;
-
-            pickup(); // go from submersible to specimen pick up area
-            specStrafe(); // align the third specimen for placement
-            placeSpecimen(); // place the third specimen
-            blockNum += 1;
-
-            pickup(); // go from submersible to specimen pick up area
-            specStrafe(); // align the fourth specimen for placement
-            placeSpecimen(); // place the fourth specimen
-            blockNum += 1;
 
 
             // Update telemetry
