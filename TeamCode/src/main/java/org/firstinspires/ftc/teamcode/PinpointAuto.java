@@ -76,12 +76,15 @@ public class PinpointAuto extends LinearOpMode {
 
     private double currentPosition = 0.8;
     private double currentPosition1 = 0.3; // Start the servo at the middle position
+    private int blockNum = 1;
+    private int numSamp = 1;
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
     boolean moveStuff = true;
     boolean liftPosition = true;
-    boolean placed = true;
+    boolean placed = false;
+    boolean strafed = false;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -106,108 +109,235 @@ public class PinpointAuto extends LinearOpMode {
     // Add variables for slow mode
     private boolean slowMode = false;
     private final double SLOW_MODE_FACTOR = 0.25; // Adjust this value to change the slow mode speed
-public void placeSpecimen(){
-    odo.update();
 
-    double newTime = getRuntime();
-    double loopTime = newTime - oldTime;
-    double frequency = 1 / loopTime;
-    oldTime = newTime;
-
-    // Get the current Position (x & y in mm, and heading in degrees) of the robot
-    Pose2D pos = odo.getPosition();
-    String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-    telemetry.addData("Position", data);
-
-    // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
-    Pose2D vel = odo.getVelocity();
-    String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-    telemetry.addData("Velocity", velocity);
-
-
-    // Lift control logic
-    if (liftPosition) {
-        useLiftEncoder = true;
-        lift_target = 490;
-        liftPosition = false;
+//    this function goes straight from the wall to place the specimen
+    public void off(){
+        leftFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        rightFrontDrive.setPower(0);
     }
 
-    // Drive motor control logic
-    while (pos.getX(DistanceUnit.INCH) < 29.5 && opModeIsActive()) {
-        telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
-        // Update the lift motors while driving
-        if (lift_target > lift_left.getCurrentPosition() + 15) {
-            lift_left.setPower(.8);
-        } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-            lift_left.setPower(-.8);
-        } else {
-            lift_left.setPower(0);
-        }
-
-        lift_right.setPower(lift_left.getPower());
-        // Drive the robot forward
+    public void forward(){
         leftFrontDrive.setPower(.4);
         leftBackDrive.setPower(.4);
         rightBackDrive.setPower(.4);
         rightFrontDrive.setPower(.4);
+    }
 
-        // Update the position
-        pos = odo.getPosition();
+    public void reverse(){
+        leftFrontDrive.setPower(-.4);
+        leftBackDrive.setPower(-.4);
+        rightBackDrive.setPower(-.4);
+        rightFrontDrive.setPower(-.4);
+    }
+
+    public void strafeRight(){
+        leftFrontDrive.setPower(0.4);
+        leftBackDrive.setPower(-0.4);
+        rightBackDrive.setPower(0.4);
+        rightFrontDrive.setPower(-0.4);
+    }
+
+    public void strafeLeft(){
+        leftFrontDrive.setPower(-0.4);
+        leftBackDrive.setPower(0.4);
+        rightBackDrive.setPower(-0.4);
+        rightFrontDrive.setPower(0.4);
+    }
+
+
+    public void placeSpecimen(){
         odo.update();
-    }
 
-    // Stop the drive motors
-    leftFrontDrive.setPower(0);
-    leftBackDrive.setPower(0);
-    rightBackDrive.setPower(0);
-    rightFrontDrive.setPower(0);
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
 
-    // Wait for 2 seconds
-    sleep(200);
-    // Update the lift target after driving
-    if (!liftPosition) {
-        telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
-        telemetry.update();
-        useLiftEncoder = true;
-        lift_target = 620;
-    }
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
 
-    top_arm.setPosition(.2);
-    while (lift_target > lift_left.getCurrentPosition() + 15) {
-        telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
-        telemetry.update();
-        if (lift_target > lift_left.getCurrentPosition() + 15) {
-            lift_left.setPower(.8);
-        } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-            lift_left.setPower(-.7);
-        } else {
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+
+        // Lift control logic
+        if (liftPosition) {
+            useLiftEncoder = true;
+            lift_target = 490;
+            liftPosition = false;
+        }
+
+        // Drive motor control logic
+        while (pos.getX(DistanceUnit.INCH) < 29.5 && opModeIsActive()) {
+            telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
+            // Update the lift motors while driving
+            if (lift_target > lift_left.getCurrentPosition() + 15) {
+                lift_left.setPower(.8);
+            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                lift_left.setPower(-.8);
+            } else {
+                lift_left.setPower(0);
+            }
+
+            lift_right.setPower(lift_left.getPower());
+            // Drive the robot forward
+            forward();
+
+            // Update the position
+            pos = odo.getPosition();
+            odo.update();
+        }
+
+        // Stop the drive motors
+        off();
+
+        // Wait for 2 seconds
+        sleep(200);
+        // Update the lift target after driving
+        if (!liftPosition) {
+            telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+            telemetry.update();
+            useLiftEncoder = true;
+            lift_target = 620;
+        }
+
+        top_arm.setPosition(.2);
+        while (lift_target > lift_left.getCurrentPosition() + 15) {
+            telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+            telemetry.update();
+            if (lift_target > lift_left.getCurrentPosition() + 15) {
+                lift_left.setPower(.8);
+            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                lift_left.setPower(-.7);
+            } else {
+                lift_left.setPower(0);
+            }
+            lift_right.setPower(lift_left.getPower());
+        }
+
+        // Adjust the outtake claw and top arm positions
+        sleep(500);
+        outtake_claw.setPosition(.2);
+        top_arm.setPosition(.1);
+        lift_target = 0;
+
+        while (lift_target < lift_left.getCurrentPosition() + 15) {
+            telemetry.addLine("shivatron");
+            if (lift_target > lift_left.getCurrentPosition() + 15) {
+                lift_left.setPower(.8);
+            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                lift_left.setPower(-.6);
+            } else {
+                lift_left.setPower(0);
+            }
+            lift_right.setPower(lift_left.getPower());
+        }
+
+        if (lift_target > lift_left.getCurrentPosition() + 15){
             lift_left.setPower(0);
         }
-        lift_right.setPower(lift_left.getPower());
     }
 
-    // Adjust the outtake claw and top arm positions
-    sleep(500);
-    outtake_claw.setPosition(.2);
-    top_arm.setPosition(.1);
-    lift_target = 0;
+// this function goes from the placed specimen to the first sample on the field
+    public void subToSamp(){
+        odo.update();
 
-    while (lift_target < lift_left.getCurrentPosition() + 15) {
-        telemetry.addLine("shivatron");
-        if (lift_target > lift_left.getCurrentPosition() + 15) {
-            lift_left.setPower(.8);
-        } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-            lift_left.setPower(-.6);
-        } else {
-            lift_left.setPower(0);
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+    //    rotate robot 90 degrees
+        while (pos.getHeading(AngleUnit.DEGREES) > -89.9 || pos.getHeading(AngleUnit.DEGREES) < -90.1) {
+            telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
+            telemetry.update();
+            if (pos.getHeading(AngleUnit.DEGREES) > -89.9) {
+                leftFrontDrive.setPower(0.4);
+                leftBackDrive.setPower(0.4);
+                rightBackDrive.setPower(-0.4);
+                rightFrontDrive.setPower(-0.4);
+            }
+            if (pos.getHeading(AngleUnit.DEGREES) < -90.1) {
+                leftFrontDrive.setPower(-0.2);
+                leftBackDrive.setPower(-0.2);
+                rightBackDrive.setPower(0.2);
+                rightFrontDrive.setPower(0.2);
+            }
+            pos = odo.getPosition();
+            odo.update();
         }
-        lift_right.setPower(lift_left.getPower());
+        off();
+
+    //    strafe closer to wall to avoid hitting the corner of the submerssible
+        while (pos.getX(DistanceUnit.INCH) < 40) {
+            strafeRight();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+    //  drive to the lane between the submerssible and block
+        while (pos.getY(DistanceUnit.INCH) > -32) {
+            forward();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+    // strafe along side a block to be able to drive behind it next
+        while (pos.getX(DistanceUnit.INCH) > 16) {
+            strafeLeft();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+    //    go directly behind a block
+        while (pos.getY(DistanceUnit.INCH) > -45) {
+            forward();
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
     }
 
-    if (lift_target > lift_left.getCurrentPosition() + 15){
-        lift_left.setPower(0);
+    // next functions that need to be made
+    public void dropOff(){
+    //    push sample straight into human player zone (this function will be run 3 times)
     }
-}
+
+    public void dropToSamp(){
+    //        take numSamp as an argument and add that distance needed to be covered
+    //    go from drop off to the next sample that needs to be pushed (this function will be run 2 times)
+    }
+    public void pickupSpecial(){
+//     from last block drop off, go to the spot where the human player place the specimen, pick up the specimen
+    }
+    public void pickup(){
+//        go to the spot where the human player place the specimen, pick up the specimen
+    }
+
+    public void specStrafe(){
+//        bring specimen from pick up to appropriate distance on the wall
+//       according to blockNum (how many specimens have already been placed)
+    }
+
     @Override
     public void runOpMode() {
         leftFrontDrive = hardwareMap.get(DcMotor.class, "lf");
@@ -352,101 +482,40 @@ public void placeSpecimen(){
             slide_left.setPosition(0.8);
             slide_right.setPosition(0.3);
 
-            if(placed){
+            if(!placed){
                 placeSpecimen();
-                placed = false;
+                placed = true;
+                blockNum += 1;
             }
-
-            boolean strafed = false;
 
             if (!strafed) {
+                subToSamp();
                 strafed = true;
-                while (pos.getHeading(AngleUnit.DEGREES) > -89.9 || pos.getHeading(AngleUnit.DEGREES) < -90.1) {
-                    telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
-                    telemetry.update();
-                    if (pos.getHeading(AngleUnit.DEGREES) > -89.9) {
-                        leftFrontDrive.setPower(0.4);
-                        leftBackDrive.setPower(0.4);
-                        rightBackDrive.setPower(-0.4);
-                        rightFrontDrive.setPower(-0.4);
-                    }
-                    if (pos.getHeading(AngleUnit.DEGREES) < -90.1) {
-                        leftFrontDrive.setPower(-0.2);
-                        leftBackDrive.setPower(-0.2);
-                        rightBackDrive.setPower(0.2);
-                        rightFrontDrive.setPower(0.2);
-                    }
-                    pos = odo.getPosition();
-                    odo.update();
-                }
-                leftFrontDrive.setPower(0.0);
-                leftBackDrive.setPower(0.0);
-                rightBackDrive.setPower(0.0);
-                rightFrontDrive.setPower(0.0);
-
-                while (pos.getX(DistanceUnit.INCH) < 40) {
-                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
-                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
-                    telemetry.update();
-                    leftFrontDrive.setPower(0.4);
-                    leftBackDrive.setPower(-0.4);
-                    rightBackDrive.setPower(0.4);
-                    rightFrontDrive.setPower(-0.4);
-                    pos = odo.getPosition();
-                    odo.update();
-                }
-
-                leftFrontDrive.setPower(0.0);
-                leftBackDrive.setPower(0.0);
-                rightBackDrive.setPower(0.0);
-                rightFrontDrive.setPower(0.0);
-
-                while (pos.getY(DistanceUnit.INCH) > -32) {
-                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
-                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
-                    telemetry.update();
-                    leftFrontDrive.setPower(0.4);
-                    leftBackDrive.setPower(0.4);
-                    rightBackDrive.setPower(0.4);
-                    rightFrontDrive.setPower(0.4);
-                    pos = odo.getPosition();
-                    odo.update();
-                }
-
-                while (pos.getX(DistanceUnit.INCH) > 20) {
-                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
-                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
-                    telemetry.update();
-                    leftFrontDrive.setPower(-0.4);
-                    leftBackDrive.setPower(0.4);
-                    rightBackDrive.setPower(-0.4);
-                    rightFrontDrive.setPower(0.4);
-                    pos = odo.getPosition();
-                    odo.update();
-                }
-
-                while (pos.getY(DistanceUnit.INCH) > -42) {
-                    telemetry.addData("y: ", pos.getY(DistanceUnit.INCH));
-                    telemetry.addData("x: ", pos.getX(DistanceUnit.INCH));
-                    telemetry.update();
-                    leftFrontDrive.setPower(0.4);
-                    leftBackDrive.setPower(0.4);
-                    rightBackDrive.setPower(0.4);
-                    rightFrontDrive.setPower(0.4);
-                    pos = odo.getPosition();
-                    odo.update();
-                }
-
-                leftFrontDrive.setPower(0.0);
-                leftBackDrive.setPower(0.0);
-                rightBackDrive.setPower(0.0);
-                rightFrontDrive.setPower(0.0);
             }
 
+            dropOff(); // drop off first sample
 
+            dropToSamp(); // go from drop off of first sample to second sample
+            dropOff(); // drop off second sample
+            numSamp += 1;
 
+            dropToSamp(); // go from drop off of second sample to third sample
+            dropOff(); // drop off last sample
 
+            pickupSpecial(); // go from drop off of last sample to specimen pick up area
+            specStrafe(); // align the second specimen for placement
+            placeSpecimen(); // place the second specimen
+            blockNum += 1;
 
+            pickup(); // go from submersible to specimen pick up area
+            specStrafe(); // align the third specimen for placement
+            placeSpecimen(); // place the third specimen
+            blockNum += 1;
+
+            pickup(); // go from submersible to specimen pick up area
+            specStrafe(); // align the fourth specimen for placement
+            placeSpecimen(); // place the fourth specimen
+            blockNum += 1;
 
 
             // Update telemetry
