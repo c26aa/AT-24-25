@@ -254,6 +254,7 @@ public class PinpointAuto extends LinearOpMode {
 
         if (lift_target > lift_left.getCurrentPosition() + 15){
             lift_left.setPower(0);
+            lift_right.setPower(lift_left.getPower());
         }
     }
 
