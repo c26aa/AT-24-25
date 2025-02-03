@@ -76,11 +76,11 @@ public class PinpointAuto extends LinearOpMode {
 
     private double currentPosition = 0.8;
     private double currentPosition1 = 0.3; // Start the servo at the middle position
-    private int blockNum = 1;
+    private int blockNum = 0;
     private int numSamp = 1;
     private int sampX = 49;
     private  int dropX = 20;
-    private int pickupX = 10; // way to high right now to not break the claw
+    private int pickupX = 0; // way to high right now to not break the claw
     private int pickupY = 47;
     private int placementOffset = 3;
     private static final double CHANGE_AMOUNT = 0.005;
@@ -90,6 +90,7 @@ public class PinpointAuto extends LinearOpMode {
     boolean liftPosition = true;
     boolean done = false;
     private double heading = 0.0;
+    private int distOff = 9;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -231,7 +232,7 @@ public class PinpointAuto extends LinearOpMode {
         }
 
         // Drive motor control logic
-        while (pos.getX(DistanceUnit.INCH) < 29.5 && opModeIsActive()) {
+        while (pos.getX(DistanceUnit.INCH) < 29.5+distOff*blockNum && opModeIsActive()) {
             telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
             // Update the lift motors while driving
 //            uncomment this once lift is fine
@@ -469,7 +470,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
 //        go to specimen at wall
-        while (pos.getX(DistanceUnit.INCH) > pickupX && opModeIsActive()) {
+        while (pos.getX(DistanceUnit.INCH) > pickupX+distOff*blockNum && opModeIsActive()) {
             reverse();
             pos = odo.getPosition();
             odo.update();
@@ -517,7 +518,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
 //        go to specimen at wall
-        while (pos.getX(DistanceUnit.INCH) > pickupX && opModeIsActive()) {
+        while (pos.getX(DistanceUnit.INCH) > pickupX+distOff*blockNum && opModeIsActive()) {
             reverse();
             pos = odo.getPosition();
             odo.update();
