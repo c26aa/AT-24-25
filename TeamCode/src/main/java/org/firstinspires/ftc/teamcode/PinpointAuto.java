@@ -79,7 +79,7 @@ public class PinpointAuto extends LinearOpMode {
     private int blockNum = 0;
     private int numSamp = 1;
     private int sampX = 49;
-    private  int dropX = 20;
+    private  int dropX = 15;
     private int pickupX = 0; // way to high right now to not break the claw
     private int pickupY = 47;
     private int placementOffset = 3;
