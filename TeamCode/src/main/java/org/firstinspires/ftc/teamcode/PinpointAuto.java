@@ -362,7 +362,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
     //    go directly behind a block
-        while (pos.getY(DistanceUnit.INCH) < 47 && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) < 50 && opModeIsActive()) {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
