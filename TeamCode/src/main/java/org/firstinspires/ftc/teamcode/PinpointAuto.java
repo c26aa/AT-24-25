@@ -78,8 +78,8 @@ public class PinpointAuto extends LinearOpMode {
     private double currentPosition1 = 0.3; // Start the servo at the middle position
     private int blockNum = 0;
     private int numSamp = 1;
-    private int sampX = 49;
-    private  int dropX = 15;
+    private int sampX = 50;
+    private  int dropX = 8;
     private int pickupX = 0; // way to high right now to not break the claw
     private int pickupY = 47;
     private int placementOffset = 3;
@@ -90,7 +90,8 @@ public class PinpointAuto extends LinearOpMode {
     boolean liftPosition = true;
     boolean done = false;
     private double heading = 0.0;
-    private int distOff = 9;
+//    private int distOff = 9;
+    private int distOff = 8;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -122,6 +123,7 @@ public class PinpointAuto extends LinearOpMode {
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
         rightFrontDrive.setPower(0);
+        headingCorrect();
     }
 
     public void forward(){
@@ -129,7 +131,6 @@ public class PinpointAuto extends LinearOpMode {
         leftBackDrive.setPower(.4);
         rightBackDrive.setPower(.4);
         rightFrontDrive.setPower(.4);
-        headingCorrect();
     }
 
     public void reverse(){
@@ -137,7 +138,6 @@ public class PinpointAuto extends LinearOpMode {
         leftBackDrive.setPower(-.4);
         rightBackDrive.setPower(-.4);
         rightFrontDrive.setPower(-.4);
-        headingCorrect();
     }
 
     public void strafeRight(){
@@ -145,7 +145,6 @@ public class PinpointAuto extends LinearOpMode {
         leftBackDrive.setPower(-0.7);
         rightBackDrive.setPower(0.7);
         rightFrontDrive.setPower(-0.7);
-        headingCorrect();
     }
 
     public void strafeLeft(){
@@ -173,28 +172,43 @@ public class PinpointAuto extends LinearOpMode {
         String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Velocity", velocity);
 
-        while (heading < -0.1 || heading > 0.1){
-            heading = pos.getHeading(AngleUnit.DEGREES);
-            telemetry.addData("heading", heading);
-            telemetry.addData("x", pos.getX(DistanceUnit.INCH ));
-            telemetry.addData("y", pos.getY(DistanceUnit.INCH ));
+        pos = odo.getPosition();
+        odo.update();
+        heading = pos.getHeading(AngleUnit.DEGREES);
+        telemetry.addData("heading", heading);
+        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+        telemetry.update();
 
+        while (heading < -0.1 || heading > 0.1){
+            pos = odo.getPosition();
+            odo.update();
+            heading = pos.getHeading(AngleUnit.DEGREES);
+
+            telemetry.addData("heading", heading);
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.update();
 
-            if (heading < -0.1){
-                leftFrontDrive.setPower(-0.4);
-                leftBackDrive.setPower(-0.4);
-                rightBackDrive.setPower(0.4);
-                rightFrontDrive.setPower(0.4);
-            }
             if (heading > 0.1){
-                leftFrontDrive.setPower(0.4);
-                leftBackDrive.setPower(0.4);
-                rightBackDrive.setPower(-0.4);
-                rightFrontDrive.setPower(-0.4);
+                leftFrontDrive.setPower(0.15);
+                leftBackDrive.setPower(0.15);
+                rightBackDrive.setPower(-0.15);
+                rightFrontDrive.setPower(-0.15);
+            }
+            if (heading < -0.1){
+                leftFrontDrive.setPower(-0.15);
+                leftBackDrive.setPower(-0.15);
+                rightBackDrive.setPower(0.15);
+                rightFrontDrive.setPower(0.15);
             }
 
         }
+
+        leftFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        rightFrontDrive.setPower(0);
     }
 
     public void pickupClawAction(){
@@ -232,18 +246,17 @@ public class PinpointAuto extends LinearOpMode {
         }
 
         // Drive motor control logic
-        while (pos.getX(DistanceUnit.INCH) < 29.5+distOff*blockNum && opModeIsActive()) {
+        while (pos.getX(DistanceUnit.INCH) < 29+distOff*blockNum && opModeIsActive()) {
             telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
             // Update the lift motors while driving
-//            uncomment this once lift is fine
-//            if (lift_target > lift_left.getCurrentPosition() + 15) {
-//                lift_left.setPower(.8);
-//            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-//                lift_left.setPower(-.8);
-//            } else {
-//                lift_left.setPower(0);
-//            }
-//            lift_right.setPower(lift_left.getPower());
+            if (lift_target > lift_left.getCurrentPosition() + 15) {
+                lift_left.setPower(.8);
+            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                lift_left.setPower(-.8);
+            } else {
+                lift_left.setPower(0);
+            }
+            lift_right.setPower(lift_left.getPower());
 
             // Drive the robot forward
             forward();
@@ -268,19 +281,18 @@ public class PinpointAuto extends LinearOpMode {
 
         //  pull claw back and lift scissor lift to place sample
         top_arm.setPosition(.2);
-//        uncomment this once lift works
-//        while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
-//            telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
-//            telemetry.update();
-//            if (lift_target > lift_left.getCurrentPosition() + 15) {
-//                lift_left.setPower(.8);
-//            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-//                lift_left.setPower(-.7);
-//            } else {
-//                lift_left.setPower(0);
-//            }
-//            lift_right.setPower(lift_left.getPower());
-//        }
+        while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
+            telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
+            telemetry.update();
+            if (lift_target > lift_left.getCurrentPosition() + 15) {
+                lift_left.setPower(.8);
+            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                lift_left.setPower(-.5);
+            } else {
+                lift_left.setPower(0);
+            }
+            lift_right.setPower(lift_left.getPower());
+        }
 
         // Adjust the outtake claw and top arm positions
         sleep(200);
@@ -289,23 +301,22 @@ public class PinpointAuto extends LinearOpMode {
         lift_target = 0;
 
         //  Lower scissor lift
-//        uncomment once lift is good
-//        while (lift_target < lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
-//            telemetry.addLine("shivatron");
-//            if (lift_target > lift_left.getCurrentPosition() + 15) {
-//                lift_left.setPower(.8);
-//            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-//                lift_left.setPower(-.6);
-//            } else {
-//                lift_left.setPower(0);
-//            }
-//            lift_right.setPower(lift_left.getPower());
-//        }
-//
-//        if (lift_target > lift_left.getCurrentPosition() + 15){
-//            lift_left.setPower(0);
-//            lift_right.setPower(lift_left.getPower());
-//        }
+        while (lift_target < lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
+            telemetry.addLine("shivatron");
+            if (lift_target > lift_left.getCurrentPosition() + 15) {
+                lift_left.setPower(.8);
+            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
+                lift_left.setPower(-.6);
+            } else {
+                lift_left.setPower(0);
+            }
+            lift_right.setPower(lift_left.getPower());
+        }
+
+        if (lift_target > lift_left.getCurrentPosition() + 15){
+            lift_left.setPower(0);
+            lift_right.setPower(lift_left.getPower());
+        }
     }
 
 // this function goes from the placed specimen to the first sample on the field
@@ -329,6 +340,9 @@ public class PinpointAuto extends LinearOpMode {
 
         //    reverse closer to wall to avoid hitting the corner of the submersible
         while (pos.getX(DistanceUnit.INCH) > 22 && opModeIsActive()) {
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.update();
             reverse();
             // Update the position
             pos = odo.getPosition();
@@ -355,6 +369,9 @@ public class PinpointAuto extends LinearOpMode {
 
     // strafe along side a block to be able to drive behind it next
         while (pos.getX(DistanceUnit.INCH) < sampX && opModeIsActive()) {
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.update();
             forward();
             pos = odo.getPosition();
             odo.update();
@@ -362,7 +379,10 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
     //    go directly behind a block
-        while (pos.getY(DistanceUnit.INCH) < 50 && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) < 48 && opModeIsActive()) {
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.update();
             strafeRight();
             pos = odo.getPosition();
             odo.update();
@@ -390,6 +410,9 @@ public class PinpointAuto extends LinearOpMode {
         telemetry.addData("Velocity", velocity);
 
         while (pos.getX(DistanceUnit.INCH) > dropX && opModeIsActive()) {
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.update();
             reverse();
             pos = odo.getPosition();
             odo.update();
@@ -426,7 +449,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
         //  drive to the lane between the submersible and block
-        while (pos.getY(DistanceUnit.INCH) < 47 + 8*numSamp && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) < 48 + 4*numSamp && opModeIsActive()) {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
@@ -610,7 +633,7 @@ public class PinpointAuto extends LinearOpMode {
         the tracking point the Y (strafe) odometry pod is. forward of center is a positive number,
         backwards is a negative number.
          */
-        odo.setOffsets(-80.0, 162.5); //these are tuned for 3110-0002-0001 Product Insight #1
+        odo.setOffsets(-65.0, 145.5); //these are tuned for 3110-0002-0001 Product Insight #1
 
         /*
         Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
@@ -709,6 +732,7 @@ public class PinpointAuto extends LinearOpMode {
                 // go to first sample and drop it off at human player
                 subToSamp();
                 dropOff();
+                numSamp += 1;
 
                 // go to second sample and drop it off at human player
                 dropToSamp();
