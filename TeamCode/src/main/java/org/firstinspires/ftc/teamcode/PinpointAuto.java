@@ -93,10 +93,8 @@ public class PinpointAuto extends LinearOpMode {
 //    private int distOff = 9;
     private int distOff = 0;
     private double speed = 0.5;
-    private double speed2 = 0.8;
+    private double speed2 = 0.8; // max value is 0.89
     private double lastX = 0;
-    private double posx = 0;
-
 
     // Declare OpMode members for each of the 4 motors.
     private final ElapsedTime runtime = new ElapsedTime();
@@ -163,12 +161,36 @@ public class PinpointAuto extends LinearOpMode {
         String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Velocity", velocity);
 
-        posx = pos.getX(DistanceUnit.INCH);
+        double posx = pos.getX(DistanceUnit.INCH);
+        double yaw = (pos.getHeading(AngleUnit.DEGREES))/200; // scale down value
+        double axial = (lastX-posx)/50; // scale down value
+        double lateral = speed2;
 
-        leftFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
-        leftBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
-        rightBackDrive.setPower(speed2 - (posx-lastX)*0.05);
-        rightFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
+        double leftFrontPower = axial + lateral + yaw;
+        double rightFrontPower = axial - lateral - yaw;
+        double leftBackPower = axial - lateral + yaw;
+        double rightBackPower = axial + lateral - yaw;
+
+        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+        max = Math.max(max, Math.abs(leftBackPower));
+        max = Math.max(max, Math.abs(rightBackPower));
+
+        if (max > speed2+0.1) {
+            leftFrontPower /= max;
+            rightFrontPower /= max;
+            leftBackPower /= max;
+            rightBackPower /= max;
+        }
+
+        leftFrontDrive.setPower(leftFrontPower);
+        rightFrontDrive.setPower(rightFrontPower);
+        leftBackDrive.setPower(leftBackPower);
+        rightBackDrive.setPower(rightBackPower);
+
+//        leftFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
+//        leftBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
+//        rightBackDrive.setPower(speed2 - (posx-lastX)*0.05);
+//        rightFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
 
 //        comment out above and uncomment below if correction doesn't work
 
@@ -197,19 +219,42 @@ public class PinpointAuto extends LinearOpMode {
         String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Velocity", velocity);
 
-        posx = pos.getX(DistanceUnit.INCH);
+        double posx = pos.getX(DistanceUnit.INCH);
+        double yaw = (pos.getHeading(AngleUnit.DEGREES))/200; // scale down value
+        double axial = (lastX-posx)/50; // scale down value
+        double lateral = -speed2;
 
-        leftFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
-        leftBackDrive.setPower(speed2 - (posx-lastX)*0.05);
-        rightBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
-        rightFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
+        double leftFrontPower = axial + lateral + yaw;
+        double rightFrontPower = axial - lateral - yaw;
+        double leftBackPower = axial - lateral + yaw;
+        double rightBackPower = axial + lateral - yaw;
+
+        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+        max = Math.max(max, Math.abs(leftBackPower));
+        max = Math.max(max, Math.abs(rightBackPower));
+
+        if (max > speed2+0.1) {
+            leftFrontPower /= max;
+            rightFrontPower /= max;
+            leftBackPower /= max;
+            rightBackPower /= max;
+        }
+
+        leftFrontDrive.setPower(leftFrontPower);
+        rightFrontDrive.setPower(rightFrontPower);
+        leftBackDrive.setPower(leftBackPower);
+        rightBackDrive.setPower(rightBackPower);
+//        leftFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
+//        leftBackDrive.setPower(speed2 - (posx-lastX)*0.05);
+//        rightBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
+//        rightFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
 
         //        comment out above and uncomment below if correction doesn't work
 
-        leftFrontDrive.setPower(-speed2);
-        leftBackDrive.setPower(speed2);
-        rightBackDrive.setPower(-speed2);
-        rightFrontDrive.setPower(speed2);
+//        leftFrontDrive.setPower(-speed2);
+//        leftBackDrive.setPower(speed2);
+//        rightBackDrive.setPower(-speed2);
+//        rightFrontDrive.setPower(speed2);
     }
 
     public void fluctuationTest(){
@@ -280,7 +325,7 @@ public class PinpointAuto extends LinearOpMode {
         telemetry.addData("y", pos.getY(DistanceUnit.INCH));
         telemetry.update();
 
-        while (heading < -0.02 || heading > 0.02){
+        while (heading < -0.05 || heading > 0.05){
             pos = odo.getPosition();
             odo.update();
             heading = pos.getHeading(AngleUnit.DEGREES);
@@ -291,17 +336,17 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.update();
 
 //            if it's rotating too much than reverse heading greater than less than
-            if (heading > 0.02){
-                leftFrontDrive.setPower(0.125);
-                leftBackDrive.setPower(0.125);
-                rightBackDrive.setPower(-0.125);
-                rightFrontDrive.setPower(-0.125);
+            if (heading > 0.05){
+                leftFrontDrive.setPower(0.145);
+                leftBackDrive.setPower(0.145);
+                rightBackDrive.setPower(-0.145);
+                rightFrontDrive.setPower(-0.145);
             }
-            if (heading < -0.02){
-                leftFrontDrive.setPower(-0.125);
-                leftBackDrive.setPower(-0.125);
-                rightBackDrive.setPower(0.125);
-                rightFrontDrive.setPower(0.125);
+            if (heading < -0.05){
+                leftFrontDrive.setPower(-0.145);
+                leftBackDrive.setPower(-0.145);
+                rightBackDrive.setPower(0.145);
+                rightFrontDrive.setPower(0.145);
             }
 
         }
@@ -360,9 +405,16 @@ public class PinpointAuto extends LinearOpMode {
                 lift_left.setPower(0);
             }
             lift_right.setPower(lift_left.getPower());
-
-            // Drive the robot forward
-            forward();
+            // strafe diagonally if needed
+            if (pos.getY(DistanceUnit.INCH) < placementOffset*blockNum){
+                leftFrontDrive.setPower(0);
+                leftBackDrive.setPower(speed2);
+                rightBackDrive.setPower(0);
+                rightFrontDrive.setPower(speed2 + 0.05);
+            } else {
+                // otherwise strafe forward
+                forward();
+            }
             lastX = 29+distOff*blockNum;
 
             // Update the position
@@ -485,7 +537,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
     //    go directly behind a block
-        while (pos.getY(DistanceUnit.INCH) > -48 && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > -47 && opModeIsActive()) {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
@@ -557,7 +609,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
         //  drive to the lane between the submersible and block
-        while (pos.getY(DistanceUnit.INCH) > -48 - 5*numSamp && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > -47 - 5*numSamp && opModeIsActive()) {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
@@ -864,25 +916,25 @@ public class PinpointAuto extends LinearOpMode {
 
                 // place second specimen
                 pickupSpecial(); // go from drop off of last sample to specimen pick up area
-                specStrafe(); // align the second specimen for placement
+//                specStrafe(); // align the second specimen for placement
                 placeSpecimen(); // place the second specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place third specimen
                 pickup(); // go from submersible to specimen pick up area
-                specStrafe(); // align the third specimen for placement
+//                specStrafe(); // align the third specimen for placement
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place fourth specimen
                 pickup(); // go from submersible to specimen pick up area
-                specStrafe(); // align the fourth specimen for placement
+//                specStrafe(); // align the fourth specimen for placement
                 placeSpecimen(); // place the fourth specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place fifth specimen
                 pickup(); // go from submersible to specimen pick up area
-                specStrafe(); // align the fourth specimen for placement
+//                specStrafe(); // align the fourth specimen for placement
                 placeSpecimen(); // place the fourth specimen
                 blockNum += 1; // update how many blocks for alignment
 
