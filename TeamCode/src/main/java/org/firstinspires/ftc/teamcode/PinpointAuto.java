@@ -80,9 +80,9 @@ public class PinpointAuto extends LinearOpMode {
     private int numSamp = 1;
     private int sampX = 50;
     private  int dropX = 8;
-    private int pickupX = 0; // way to high right now to not break the claw
+    private double pickupX = 1.5; // way to high right now to not break the claw
     private int pickupY = -47;
-    private int placementOffset = 3;
+    private int placementOffset = -3;
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
@@ -92,6 +92,8 @@ public class PinpointAuto extends LinearOpMode {
     private double heading = 0.0;
 //    private int distOff = 9;
     private int distOff = 0;
+    private double speed = 0.5;
+    private double speed2 = 0.8;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -127,31 +129,31 @@ public class PinpointAuto extends LinearOpMode {
     }
 
     public void forward(){
-        leftFrontDrive.setPower(.4);
-        leftBackDrive.setPower(.4);
-        rightBackDrive.setPower(.4);
-        rightFrontDrive.setPower(.4);
+        leftFrontDrive.setPower(speed);
+        leftBackDrive.setPower(speed);
+        rightBackDrive.setPower(speed);
+        rightFrontDrive.setPower(speed);
     }
 
     public void reverse(){
-        leftFrontDrive.setPower(-.4);
-        leftBackDrive.setPower(-.4);
-        rightBackDrive.setPower(-.4);
-        rightFrontDrive.setPower(-.4);
+        leftFrontDrive.setPower(-speed);
+        leftBackDrive.setPower(-speed);
+        rightBackDrive.setPower(-speed);
+        rightFrontDrive.setPower(-speed);
     }
 
     public void strafeRight(){
-        leftFrontDrive.setPower(0.7);
-        leftBackDrive.setPower(-0.7);
-        rightBackDrive.setPower(0.7);
-        rightFrontDrive.setPower(-0.7);
+        leftFrontDrive.setPower(speed2);
+        leftBackDrive.setPower(-speed2);
+        rightBackDrive.setPower(speed2);
+        rightFrontDrive.setPower(-speed2);
     }
 
     public void strafeLeft(){
-        leftFrontDrive.setPower(-0.7);
-        leftBackDrive.setPower(0.7);
-        rightBackDrive.setPower(-0.7);
-        rightFrontDrive.setPower(0.7);
+        leftFrontDrive.setPower(-speed2);
+        leftBackDrive.setPower(speed2);
+        rightBackDrive.setPower(-speed2);
+        rightFrontDrive.setPower(speed2);
     }
 
     public void fluctuationTest(){
@@ -189,10 +191,10 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.update();
 
-            leftFrontDrive.setPower(-0.15);
-            leftBackDrive.setPower(-0.15);
-            rightBackDrive.setPower(0.15);
-            rightFrontDrive.setPower(0.15);
+            leftFrontDrive.setPower(-0.4);
+            leftBackDrive.setPower(-0.4);
+            rightBackDrive.setPower(0.4);
+            rightFrontDrive.setPower(0.4);
         }
     }
 
@@ -222,7 +224,7 @@ public class PinpointAuto extends LinearOpMode {
         telemetry.addData("y", pos.getY(DistanceUnit.INCH));
         telemetry.update();
 
-        while (heading < -0.1 || heading > 0.1){
+        while (heading < -0.02 || heading > 0.02){
             pos = odo.getPosition();
             odo.update();
             heading = pos.getHeading(AngleUnit.DEGREES);
@@ -233,13 +235,13 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.update();
 
 //            if it's rotating too much than reverse heading greater than less than
-            if (heading < -0.1){
+            if (heading > 0.02){
                 leftFrontDrive.setPower(0.15);
                 leftBackDrive.setPower(0.15);
                 rightBackDrive.setPower(-0.15);
                 rightFrontDrive.setPower(-0.15);
             }
-            if (heading > 0.1){
+            if (heading < -0.02){
                 leftFrontDrive.setPower(-0.15);
                 leftBackDrive.setPower(-0.15);
                 rightBackDrive.setPower(0.15);
@@ -263,6 +265,7 @@ public class PinpointAuto extends LinearOpMode {
 
 
     public void placeSpecimen(){
+        liftPosition = true;
         odo.update();
 
         double newTime = getRuntime();
@@ -676,7 +679,7 @@ public class PinpointAuto extends LinearOpMode {
         the tracking point the Y (strafe) odometry pod is. forward of center is a positive number,
         backwards is a negative number.
          */
-        odo.setOffsets(-65.0, 145.5); //these are tuned for 3110-0002-0001 Product Insight #1
+        odo.setOffsets(-65.0, -145.5); //these are tuned for 3110-0002-0001 Product Insight #1
 
         /*
         Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
@@ -771,7 +774,7 @@ public class PinpointAuto extends LinearOpMode {
 
             if(!done) {
                 // fluctuation test to see if our positions are messed up
-                fluctuationTest();
+//                fluctuationTest();
 
                 // place preloaded specimen
                 placeSpecimen();
