@@ -94,6 +94,8 @@ public class PinpointAuto extends LinearOpMode {
     private int distOff = 0;
     private double speed = 0.5;
     private double speed2 = 0.8;
+    private double lastX = 0;
+    private double posx = 0;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -120,6 +122,7 @@ public class PinpointAuto extends LinearOpMode {
     private final double SLOW_MODE_FACTOR = 0.25; // Adjust this value to change the slow mode speed
 
 //    this function goes straight from the wall to place the specimen
+
     public void off(){
         leftFrontDrive.setPower(0);
         leftBackDrive.setPower(0);
@@ -143,13 +146,66 @@ public class PinpointAuto extends LinearOpMode {
     }
 
     public void strafeRight(){
-        leftFrontDrive.setPower(speed2);
-        leftBackDrive.setPower(-speed2);
-        rightBackDrive.setPower(speed2);
-        rightFrontDrive.setPower(-speed2);
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        posx = pos.getX(DistanceUnit.INCH);
+
+        leftFrontDrive.setPower(speed2 - (posx-lastX)*0.1);
+        leftBackDrive.setPower(-speed2 - (posx-lastX)*0.1);
+        rightBackDrive.setPower(speed2 - (posx-lastX)*0.1);
+        rightFrontDrive.setPower(-speed2 - (posx-lastX)*0.1);
+
+//        comment out above and uncomment below if correction doesn't work
+
+//        leftFrontDrive.setPower(speed2);
+//        leftBackDrive.setPower(-speed2);
+//        rightBackDrive.setPower(speed2);
+//        rightFrontDrive.setPower(-speed2);
+
     }
 
     public void strafeLeft(){
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        posx = pos.getX(DistanceUnit.INCH);
+
+        leftFrontDrive.setPower(-speed2 - (posx-lastX)*0.1);
+        leftBackDrive.setPower(speed2 - (posx-lastX)*0.1);
+        rightBackDrive.setPower(-speed2 - (posx-lastX)*0.1);
+        rightFrontDrive.setPower(speed2 - (posx-lastX)*0.1);
+
+        //        comment out above and uncomment below if correction doesn't work
+
         leftFrontDrive.setPower(-speed2);
         leftBackDrive.setPower(speed2);
         rightBackDrive.setPower(-speed2);
@@ -306,6 +362,7 @@ public class PinpointAuto extends LinearOpMode {
 
             // Drive the robot forward
             forward();
+            lastX = 29+distOff*blockNum;
 
             // Update the position
             pos = odo.getPosition();
@@ -390,6 +447,7 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
             reverse();
+            lastX = 22;
             // Update the position
             pos = odo.getPosition();
             odo.update();
@@ -419,6 +477,7 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
             forward();
+            lastX = sampX;
             pos = odo.getPosition();
             odo.update();
         }
@@ -460,6 +519,7 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
             reverse();
+            lastX = dropX;
             pos = odo.getPosition();
             odo.update();
         }
@@ -489,13 +549,14 @@ public class PinpointAuto extends LinearOpMode {
         // strafe along side a block to be able to drive behind it next
         while (pos.getX(DistanceUnit.INCH) < sampX && opModeIsActive()) {
             forward();
+            lastX = sampX;
             pos = odo.getPosition();
             odo.update();
         }
         off();
 
         //  drive to the lane between the submersible and block
-        while (pos.getY(DistanceUnit.INCH) > -48 - 4*numSamp && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > -48 - 5*numSamp && opModeIsActive()) {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
@@ -525,6 +586,7 @@ public class PinpointAuto extends LinearOpMode {
 //      back away from last pushed sample
         while (pos.getX(DistanceUnit.INCH) < dropX+1 && opModeIsActive()) {
             forward();
+            lastX = dropX+1;
             pos = odo.getPosition();
             odo.update();
         }
@@ -541,6 +603,7 @@ public class PinpointAuto extends LinearOpMode {
 //        go to specimen at wall
         while (pos.getX(DistanceUnit.INCH) > pickupX+distOff*blockNum && opModeIsActive()) {
             reverse();
+            lastX = pickupX+distOff*blockNum;
             pos = odo.getPosition();
             odo.update();
         }
@@ -573,6 +636,7 @@ public class PinpointAuto extends LinearOpMode {
 //      back away from submersible
         while (pos.getX(DistanceUnit.INCH) > 20 && opModeIsActive()) {
             reverse();
+            lastX = 20;
             pos = odo.getPosition();
             odo.update();
         }
@@ -589,6 +653,7 @@ public class PinpointAuto extends LinearOpMode {
 //        go to specimen at wall
         while (pos.getX(DistanceUnit.INCH) > pickupX+distOff*blockNum && opModeIsActive()) {
             reverse();
+            lastX = pickupX+distOff*blockNum;
             pos = odo.getPosition();
             odo.update();
         }
