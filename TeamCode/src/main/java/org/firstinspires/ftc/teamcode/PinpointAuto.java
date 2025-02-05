@@ -78,11 +78,11 @@ public class PinpointAuto extends LinearOpMode {
     private double currentPosition1 = 0.3; // Start the servo at the middle position
     private int blockNum = 0;
     private int numSamp = 1;
-    private int sampX = 50;
+    private int sampX = 48;
     private  int dropX = 8;
     private double pickupX = 1.5; // way to high right now to not break the claw
     private int pickupY = -47;
-    private int placementOffset = -3;
+    private int placementOffset = -5;
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
@@ -165,10 +165,10 @@ public class PinpointAuto extends LinearOpMode {
 
         posx = pos.getX(DistanceUnit.INCH);
 
-        leftFrontDrive.setPower(speed2 - (posx-lastX)*0.1);
-        leftBackDrive.setPower(-speed2 - (posx-lastX)*0.1);
-        rightBackDrive.setPower(speed2 - (posx-lastX)*0.1);
-        rightFrontDrive.setPower(-speed2 - (posx-lastX)*0.1);
+        leftFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
+        leftBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
+        rightBackDrive.setPower(speed2 - (posx-lastX)*0.05);
+        rightFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
 
 //        comment out above and uncomment below if correction doesn't work
 
@@ -199,10 +199,10 @@ public class PinpointAuto extends LinearOpMode {
 
         posx = pos.getX(DistanceUnit.INCH);
 
-        leftFrontDrive.setPower(-speed2 - (posx-lastX)*0.1);
-        leftBackDrive.setPower(speed2 - (posx-lastX)*0.1);
-        rightBackDrive.setPower(-speed2 - (posx-lastX)*0.1);
-        rightFrontDrive.setPower(speed2 - (posx-lastX)*0.1);
+        leftFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
+        leftBackDrive.setPower(speed2 - (posx-lastX)*0.05);
+        rightBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
+        rightFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
 
         //        comment out above and uncomment below if correction doesn't work
 
@@ -292,16 +292,16 @@ public class PinpointAuto extends LinearOpMode {
 
 //            if it's rotating too much than reverse heading greater than less than
             if (heading > 0.02){
-                leftFrontDrive.setPower(0.15);
-                leftBackDrive.setPower(0.15);
-                rightBackDrive.setPower(-0.15);
-                rightFrontDrive.setPower(-0.15);
+                leftFrontDrive.setPower(0.125);
+                leftBackDrive.setPower(0.125);
+                rightBackDrive.setPower(-0.125);
+                rightFrontDrive.setPower(-0.125);
             }
             if (heading < -0.02){
-                leftFrontDrive.setPower(-0.15);
-                leftBackDrive.setPower(-0.15);
-                rightBackDrive.setPower(0.15);
-                rightFrontDrive.setPower(0.15);
+                leftFrontDrive.setPower(-0.125);
+                leftBackDrive.setPower(-0.125);
+                rightBackDrive.setPower(0.125);
+                rightFrontDrive.setPower(0.125);
             }
 
         }
@@ -310,6 +310,7 @@ public class PinpointAuto extends LinearOpMode {
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
         rightFrontDrive.setPower(0);
+        sleep(10);
     }
 
     public void pickupClawAction(){
@@ -455,7 +456,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
     //  drive to the lane between the submersible and block
-        while (pos.getY(DistanceUnit.INCH) > -37 && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > -36 && opModeIsActive()) {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
@@ -608,6 +609,7 @@ public class PinpointAuto extends LinearOpMode {
             odo.update();
         }
         off();
+        sleep(100);
 
 //      grab specimen and bring it to place
         pickupClawAction();
@@ -658,6 +660,7 @@ public class PinpointAuto extends LinearOpMode {
             odo.update();
         }
         off();
+        sleep(100);
 
 //      grab specimen and bring it to place
         pickupClawAction();
