@@ -92,10 +92,11 @@ public class PinpointAuto extends LinearOpMode {
     private double heading = 0.0;
 //    private int distOff = 9;
     private int distOff = 0;
-    private double speed = 0.5;
-    private double speed2 = 0.8; // max value is 0.89
+    private double maxSpeed = 0.5;
+    private double speed = maxSpeed;
+    private double maxSpeed2 = 0.8;
+    private double speed2 = maxSpeed2; // max value is 0.89
     private double lastX = 0;
-
     // Declare OpMode members for each of the 4 motors.
     private final ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFrontDrive = null;
@@ -126,6 +127,8 @@ public class PinpointAuto extends LinearOpMode {
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
         rightFrontDrive.setPower(0);
+        speed = maxSpeed;
+        speed2 = maxSpeed2;
         headingCorrect();
     }
 
@@ -162,9 +165,21 @@ public class PinpointAuto extends LinearOpMode {
         telemetry.addData("Velocity", velocity);
 
         double posx = pos.getX(DistanceUnit.INCH);
-        double yaw = (pos.getHeading(AngleUnit.DEGREES))/200; // scale down value
-        double axial = (lastX-posx)/50; // scale down value
+        double yaw = 0;
+        double axial = 0;
         double lateral = speed2;
+
+        if (posx < lastX-0.1){
+            axial = 0.05;
+        } else if (posx > lastX+0.1) {
+            axial = -0.05;
+        }
+
+        if (pos.getHeading(AngleUnit.DEGREES)> 0.1){
+            yaw = 0.05;
+        } else if (pos.getHeading(AngleUnit.DEGREES) < -0.1){
+            yaw = -0.05;
+        }
 
         double leftFrontPower = axial + lateral + yaw;
         double rightFrontPower = axial - lateral - yaw;
@@ -220,9 +235,21 @@ public class PinpointAuto extends LinearOpMode {
         telemetry.addData("Velocity", velocity);
 
         double posx = pos.getX(DistanceUnit.INCH);
-        double yaw = (pos.getHeading(AngleUnit.DEGREES))/200; // scale down value
-        double axial = (lastX-posx)/50; // scale down value
+        double yaw = 0;
+        double axial = 0;
         double lateral = -speed2;
+
+        if (posx < lastX-0.1){
+            axial = 0.05;
+        } else if (posx > lastX+0.1) {
+            axial = -0.05;
+        }
+
+        if (pos.getHeading(AngleUnit.DEGREES)> 0.1){
+            yaw = 0.05;
+        } else if (pos.getHeading(AngleUnit.DEGREES) < -0.1){
+            yaw = -0.05;
+        }
 
         double leftFrontPower = axial + lateral + yaw;
         double rightFrontPower = axial - lateral - yaw;
@@ -367,6 +394,7 @@ public class PinpointAuto extends LinearOpMode {
 
 
     public void placeSpecimen(){
+        off();
         liftPosition = true;
         odo.update();
 
@@ -410,12 +438,15 @@ public class PinpointAuto extends LinearOpMode {
                 leftFrontDrive.setPower(0);
                 leftBackDrive.setPower(speed2);
                 rightBackDrive.setPower(0);
-                rightFrontDrive.setPower(speed2 + 0.05);
+                rightFrontDrive.setPower(speed2);
             } else {
                 // otherwise strafe forward
                 forward();
             }
             lastX = 29+distOff*blockNum;
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - 29+distOff*blockNum);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
 
             // Update the position
             pos = odo.getPosition();
@@ -504,6 +535,9 @@ public class PinpointAuto extends LinearOpMode {
             // Update the position
             pos = odo.getPosition();
             odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - 22);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
 
@@ -521,6 +555,9 @@ public class PinpointAuto extends LinearOpMode {
 //            }
             pos = odo.getPosition();
             odo.update();
+
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) - 36);
+            speed2 = Math.min(Math.log(dist+2), maxSpeed2);
         }
         off();
 
@@ -533,6 +570,9 @@ public class PinpointAuto extends LinearOpMode {
             lastX = sampX;
             pos = odo.getPosition();
             odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - sampX);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
 
@@ -544,6 +584,9 @@ public class PinpointAuto extends LinearOpMode {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
+
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) - 47);
+            speed2 = Math.min(Math.log(dist+2), maxSpeed2);
         }
         off();
     }
@@ -575,6 +618,9 @@ public class PinpointAuto extends LinearOpMode {
             lastX = dropX;
             pos = odo.getPosition();
             odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - dropX);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
     }
@@ -605,6 +651,8 @@ public class PinpointAuto extends LinearOpMode {
             lastX = sampX;
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - sampX);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
 
@@ -613,6 +661,8 @@ public class PinpointAuto extends LinearOpMode {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) -47-6*numSamp);
+            speed2 = Math.min(Math.log(dist+2), maxSpeed2);
         }
         off();
     }
@@ -642,6 +692,8 @@ public class PinpointAuto extends LinearOpMode {
             lastX = dropX+1;
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - dropX+1);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
 
@@ -650,6 +702,8 @@ public class PinpointAuto extends LinearOpMode {
             strafeLeft();
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) - pickupY);
+            speed2 = Math.min(Math.log(dist+2), maxSpeed2);
         }
         off();
 
@@ -659,6 +713,8 @@ public class PinpointAuto extends LinearOpMode {
             lastX = pickupX+distOff*blockNum;
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX+distOff*blockNum);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
         sleep(100);
@@ -693,6 +749,8 @@ public class PinpointAuto extends LinearOpMode {
             lastX = 20;
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - 20);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
 
@@ -701,6 +759,8 @@ public class PinpointAuto extends LinearOpMode {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) - pickupY);
+            speed2 = Math.min(Math.log(dist+2), maxSpeed2);
         }
         off();
 
@@ -710,6 +770,8 @@ public class PinpointAuto extends LinearOpMode {
             lastX = pickupX+distOff*blockNum;
             pos = odo.getPosition();
             odo.update();
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX+distOff*blockNum);
+            speed = Math.min(Math.log(dist+2), maxSpeed);
         }
         off();
         sleep(100);
