@@ -81,7 +81,7 @@ public class PinpointAuto extends LinearOpMode {
     private int sampX = 50;
     private  int dropX = 8;
     private int pickupX = 0; // way to high right now to not break the claw
-    private int pickupY = 47;
+    private int pickupY = -47;
     private int placementOffset = 3;
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
@@ -91,7 +91,7 @@ public class PinpointAuto extends LinearOpMode {
     boolean done = false;
     private double heading = 0.0;
 //    private int distOff = 9;
-    private int distOff = 8;
+    private int distOff = 0;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -154,6 +154,48 @@ public class PinpointAuto extends LinearOpMode {
         rightFrontDrive.setPower(0.7);
     }
 
+    public void fluctuationTest(){
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        pos = odo.getPosition();
+        odo.update();
+        heading = pos.getHeading(AngleUnit.DEGREES);
+        telemetry.addData("heading", heading);
+        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+        telemetry.update();
+
+        while (opModeIsActive()){
+            pos = odo.getPosition();
+            odo.update();
+            heading = pos.getHeading(AngleUnit.DEGREES);
+            telemetry.addData("heading", heading);
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.update();
+
+            leftFrontDrive.setPower(-0.15);
+            leftBackDrive.setPower(-0.15);
+            rightBackDrive.setPower(0.15);
+            rightFrontDrive.setPower(0.15);
+        }
+    }
+
     public void headingCorrect(){
         odo.update();
 
@@ -190,13 +232,14 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.update();
 
-            if (heading > 0.1){
+//            if it's rotating too much than reverse heading greater than less than
+            if (heading < -0.1){
                 leftFrontDrive.setPower(0.15);
                 leftBackDrive.setPower(0.15);
                 rightBackDrive.setPower(-0.15);
                 rightFrontDrive.setPower(-0.15);
             }
-            if (heading < -0.1){
+            if (heading > 0.1){
                 leftFrontDrive.setPower(-0.15);
                 leftBackDrive.setPower(-0.15);
                 rightBackDrive.setPower(0.15);
@@ -351,7 +394,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
     //  drive to the lane between the submersible and block
-        while (pos.getY(DistanceUnit.INCH) < 37 && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > -37 && opModeIsActive()) {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
@@ -379,7 +422,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
     //    go directly behind a block
-        while (pos.getY(DistanceUnit.INCH) < 48 && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > -48 && opModeIsActive()) {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
@@ -449,7 +492,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
         //  drive to the lane between the submersible and block
-        while (pos.getY(DistanceUnit.INCH) < 48 + 4*numSamp && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > -48 - 4*numSamp && opModeIsActive()) {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
@@ -485,7 +528,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
 //        align with specimen
-        while (pos.getY(DistanceUnit.INCH) > pickupY && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) < pickupY && opModeIsActive()) {
             strafeLeft();
             pos = odo.getPosition();
             odo.update();
@@ -533,7 +576,7 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
 //        align with specimen
-        while (pos.getY(DistanceUnit.INCH) < pickupY && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > pickupY && opModeIsActive()) {
             strafeRight();
             pos = odo.getPosition();
             odo.update();
@@ -571,7 +614,7 @@ public class PinpointAuto extends LinearOpMode {
         telemetry.addData("Velocity", velocity);
 
         //  align with submersible placement spot
-        while (pos.getY(DistanceUnit.INCH) > placementOffset * blockNum && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) < placementOffset * blockNum && opModeIsActive()) {
             strafeLeft();
             pos = odo.getPosition();
             odo.update();
@@ -650,7 +693,7 @@ public class PinpointAuto extends LinearOpMode {
         increase when you move the robot forward. And the Y (strafe) pod should increase when
         you move the robot to the left.
          */
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
 
         /*
@@ -724,7 +767,12 @@ public class PinpointAuto extends LinearOpMode {
             slide_left.setPosition(0.8);
             slide_right.setPosition(0.3);
 
+            sleep(10);
+
             if(!done) {
+                // fluctuation test to see if our positions are messed up
+                fluctuationTest();
+
                 // place preloaded specimen
                 placeSpecimen();
                 blockNum += 1;
