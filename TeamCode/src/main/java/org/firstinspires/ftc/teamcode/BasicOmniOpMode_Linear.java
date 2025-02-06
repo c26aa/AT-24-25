@@ -1,11 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.Servo;
 import static org.firstinspires.ftc.teamcode.Constants.*;
@@ -139,10 +136,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             // Servo control (unchanged) this sucks change this
             if (gamepad2.left_trigger > 0.1) {//closed positon
                 currentPosition += CHANGE_AMOUNT;
-                currentPosition = Math.min(Math.max(currentPosition, 0.2), 0.8);//makes sure its never above or below min and max value
+                currentPosition = Math.min(Math.max(currentPosition, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);//makes sure its never above or below min and max value
                 slide_left.setPosition(currentPosition);
                 currentPosition1 -= CHANGE_AMOUNT;
-                currentPosition1 = Math.min(Math.max(currentPosition1, 0.3), 0.9);
+                currentPosition1 = Math.min(Math.max(currentPosition1, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
                 slide_right.setPosition(currentPosition1);
 
 
@@ -150,17 +147,13 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             if (gamepad2.right_trigger > 0.1) {//
                 currentPosition -= CHANGE_AMOUNT;
-                currentPosition = Math.min(Math.max(currentPosition, 0.2), 0.8);//makes sure its never above or below min and max value
+                currentPosition = Math.min(Math.max(currentPosition, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);//makes sure its never above or below min and max value
                 slide_left.setPosition(currentPosition);
                 currentPosition1 += CHANGE_AMOUNT;
-                currentPosition1 = Math.min(Math.max(currentPosition1, 0.3), 0.9);
+                currentPosition1 = Math.min(Math.max(currentPosition1, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
                 slide_right.setPosition(currentPosition1);
 
             }
-            double lift_power_right = 0.7;//95
-            double lift_power_left = 0.7;
-//            int lift_max_left = 435;
-//            int lift_min_left = 0;
 
             if (gamepad2.dpad_up || gamepad2.dpad_down) {
                 useLiftEncoder = false;
@@ -178,16 +171,16 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 }
                 //NOTE TO SELF: IMPLEMENT MORE ROBUST CORRECTION MECHANISM
                 if (lift_target > lift_left.getCurrentPosition() + 15) {
-                    lift_left.setPower(.7);
+                    lift_left.setPower(SCISSORLIFT_POWER);
                 } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                    lift_left.setPower(-.7);
+                    lift_left.setPower(-SCISSORLIFT_POWER);
                 } else {
                     lift_left.setPower(0);
                 }
             } else if (gamepad2.dpad_up && lift_left.getCurrentPosition() < 1400) {//scissor lift
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
-                lift_left.setPower(lift_power_left);
+                lift_left.setPower(SCISSORLIFT_POWER);
 
                 telemetry.addData("Left Lift Power", lift_left.getPower());
                 telemetry.addData("Lift encoder value", lift_left.getCurrentPosition());
@@ -196,7 +189,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             } else if (gamepad2.dpad_down && lift_left.getCurrentPosition() > 30) {
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
-                lift_left.setPower(-lift_power_left);
+                lift_left.setPower(-SCISSORLIFT_POWER);
 
                 telemetry.addData("Left Lift Power", lift_left.getPower());
                 telemetry.addData("Lift encoder value", lift_left.getCurrentPosition());
@@ -212,53 +205,53 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad2.y) {//back position
                 bar_left.setPosition(0.61);
                 bar_right.setPosition(0.55);
-                left_right_hinge.setPosition(0.72);
-                up_down_hinge.setPosition(0.3);
+                left_right_hinge.setPosition(HINGE_MIDDLE);
+                up_down_hinge.setPosition(WRIST_UP);
 
             }
 
             if (gamepad2.b) {//regular pick up
                 bar_left.setPosition(0.38);
                 bar_right.setPosition(0.77);
-                left_right_hinge.setPosition(0.72);
-                up_down_hinge.setPosition(1.0);
+                left_right_hinge.setPosition(HINGE_MIDDLE);
+                up_down_hinge.setPosition(WRIST_DOWN);
 
             }
 
             if (gamepad2.a) {//claw middle
                 bar_left.setPosition(0.4);
                 bar_right.setPosition(0.76);
-                left_right_hinge.setPosition(0.72);
-                up_down_hinge.setPosition(0.5);
+                left_right_hinge.setPosition(HINGE_MIDDLE);
+                up_down_hinge.setPosition(WRIST_MIDDLE);
             }
             if (gamepad2.x) {//handoff
-                outtake_claw.setPosition(.2);
+                claw.setPosition(CLAW_CLOSED-0.02);
+                outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                 bar_left.setPosition(0.65);
                 bar_right.setPosition(0.51);
-                left_right_hinge.setPosition(0.72);
+                left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(0.0);
-                top_arm.setPosition(0.7);
-                slide_left.setPosition(0.61);
-                slide_right.setPosition(0.49);
+                top_arm.setPosition(OUTTAKE_ARM_FRONT+0.03);
+                slide_left.setPosition(0.6);
+                slide_right.setPosition(0.5);
                 sleep(1500);
-                outtake_claw.setPosition(.45);
+                outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
                 sleep(500);
-                claw.setPosition(0.55);
-                top_arm.setPosition(0.1);
+                claw.setPosition(CLAW_OPEN);
+                top_arm.setPosition(OUTTAKE_ARM_BACK);
 //                lift_target= 1450;
 //                useLiftEncoder = true;
 //                sleep(2000);
-                top_arm.setPosition(0.3);
 
 
             }
 
 
             if (gamepad2.right_bumper) {//close
-                claw.setPosition(0.91);//95
+                claw.setPosition(CLAW_CLOSED);//95
             }
             if (gamepad2.left_bumper) {//open
-                claw.setPosition(0.55);
+                claw.setPosition(CLAW_OPEN);
 
             }
 
@@ -305,23 +298,22 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 //            }
 
             if (gamepad1.left_bumper) {//open
-                outtake_claw.setPosition(.2);
+                outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
             }
 
             if (gamepad1.right_bumper) {//close
-                outtake_claw.setPosition(0.45);
+                outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
 
             }
             if (gamepad1.dpad_down) {//towards front/handoff
-                top_arm.setPosition(0.8);
-
+                top_arm.setPosition(OUTTAKE_ARM_FRONT);
             }
             if (gamepad1.dpad_up) {
-                top_arm.setPosition(0.1);// back side
+                top_arm.setPosition(OUTTAKE_ARM_BACK);// back side
 
             }
             if (gamepad1.dpad_left) {
-                top_arm.setPosition(0.3);//for bucket
+                top_arm.setPosition(OUTTAKE_ARM_BUCKET);//for bucket
 
             }
             if (gamepad1.a) {

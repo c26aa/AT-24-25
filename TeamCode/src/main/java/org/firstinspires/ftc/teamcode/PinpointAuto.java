@@ -36,6 +36,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import static org.firstinspires.ftc.teamcode.Constants.*;
 
 import java.util.Locale;
 
@@ -930,8 +931,11 @@ public class PinpointAuto extends LinearOpMode {
 
             if(!done) {
                 // fluctuation test to see if our positions are messed up
-//                fluctuationTest();
-
+                // fluctuationTest();
+                bar_left.setPosition(0.61);
+                bar_right.setPosition(0.55);
+                left_right_hinge.setPosition(HINGE_LEFT);
+                up_down_hinge.setPosition(0.2);
                 // place preloaded specimen
                 placeSpecimen();
                 blockNum += 1;
