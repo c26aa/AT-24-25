@@ -4,7 +4,7 @@ public class Constants {
 
 
 
-    static final double CLAW_OPEN = .55; //.8
+    static final double CLAW_OPEN = .47; //.8
     static final double CLAW_CLOSED = .78;
 
     static final double WRIST_UP = 0.3;

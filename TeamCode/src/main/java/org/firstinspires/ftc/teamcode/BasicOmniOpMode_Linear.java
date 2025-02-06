@@ -234,7 +234,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 top_arm.setPosition(OUTTAKE_ARM_FRONT+0.03);
                 slide_left.setPosition(0.6);
                 slide_right.setPosition(0.5);
-                sleep(1500);
+                sleep(1000);
                 outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
                 sleep(500);
                 claw.setPosition(CLAW_OPEN);
@@ -255,18 +255,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             }
 
-//            if (gamepad2.left_stick_x > 0.2){
-//                bar_left.setPosition(0.61);
-//                bar_right.setPosition(0.55);
-//                left_right_hinge.setPosition(0.5);
-//                up_down_hinge.setPosition(0.2);
-//            }
-//            if (gamepad2.left_stick_x < -0.2){
-//                bar_left.setPosition(0.61);
-//                bar_right.setPosition(0.55);
-//                left_right_hinge.setPosition(0.9);
-//                up_down_hinge.setPosition(0.2);
-//            }
+            if (gamepad2.left_stick_x > 0.2){
+               left_right_hinge.setPosition(HINGE_LEFT);
+            }
+            if (gamepad2.left_stick_x < -0.2){
+
+                left_right_hinge.setPosition(HINGE_RIGHT);
+
+            }
 
 
             int lift_encoder_value = lift_left.getCurrentPosition();
@@ -322,7 +318,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
                 // Open the claw after a short delay (if needed)
                 new Thread(() -> {
-                    sleep(1000); // Adjust this delay if necessary
+                    sleep(500); // Adjust this delay if necessary
                     outtake_claw.setPosition(0.2);
                     sleep(1000); // Adjust this delay if necessary
                     top_arm.setPosition(0.1);
@@ -336,7 +332,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 outtake_claw.setPosition(0.45);
                 useLiftEncoder = true;
                 lift_target = lift_left.getCurrentPosition() + 130;
-                sleep(2000);
+                sleep(1000);
                 top_arm.setPosition(0.8);
 
 
