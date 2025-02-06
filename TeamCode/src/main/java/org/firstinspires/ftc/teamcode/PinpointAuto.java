@@ -97,7 +97,11 @@ public class PinpointAuto extends LinearOpMode {
     private double maxSpeed2 = 0.9;
     private double speed2 = maxSpeed2; // max value is 0.89
     private double lastX = 0;
-    private double logAdd = 1.2;
+    private double logAdd = 1.5;
+    private double axial = 0.0;
+    private double lateral = 0.0;
+    private double yaw = 0.0;
+
     // Declare OpMode members for each of the 4 motors.
     private final ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFrontDrive = null;
@@ -147,41 +151,7 @@ public class PinpointAuto extends LinearOpMode {
         rightFrontDrive.setPower(-speed);
     }
 
-    public void strafeRight(){
-        odo.update();
-
-        double newTime = getRuntime();
-        double loopTime = newTime - oldTime;
-        double frequency = 1 / loopTime;
-        oldTime = newTime;
-
-        // Get the current Position (x & y in mm, and heading in degrees) of the robot
-        Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-
-        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
-        Pose2D vel = odo.getVelocity();
-        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Velocity", velocity);
-
-        double posx = pos.getX(DistanceUnit.INCH);
-        double yaw = 0;
-        double axial = 0;
-        double lateral = speed2;
-
-        if (posx < lastX-0.1){
-            axial = 0.05;
-        } else if (posx > lastX+0.1) {
-            axial = -0.05;
-        }
-
-        if (pos.getHeading(AngleUnit.DEGREES)> 0.1){
-            yaw = 0.05;
-        } else if (pos.getHeading(AngleUnit.DEGREES) < -0.1){
-            yaw = -0.05;
-        }
-
+    public void strafe(){
         double leftFrontPower = axial + lateral + yaw;
         double rightFrontPower = axial - lateral - yaw;
         double leftBackPower = axial - lateral + yaw;
@@ -203,87 +173,145 @@ public class PinpointAuto extends LinearOpMode {
         leftBackDrive.setPower(leftBackPower);
         rightBackDrive.setPower(rightBackPower);
 
-//        leftFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
-//        leftBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
-//        rightBackDrive.setPower(speed2 - (posx-lastX)*0.05);
-//        rightFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
-
-//        comment out above and uncomment below if correction doesn't work
-
-//        leftFrontDrive.setPower(speed2);
-//        leftBackDrive.setPower(-speed2);
-//        rightBackDrive.setPower(speed2);
-//        rightFrontDrive.setPower(-speed2);
-
     }
 
-    public void strafeLeft(){
-        odo.update();
-
-        double newTime = getRuntime();
-        double loopTime = newTime - oldTime;
-        double frequency = 1 / loopTime;
-        oldTime = newTime;
-
-        // Get the current Position (x & y in mm, and heading in degrees) of the robot
-        Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-
-        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
-        Pose2D vel = odo.getVelocity();
-        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Velocity", velocity);
-
-        double posx = pos.getX(DistanceUnit.INCH);
-        double yaw = 0;
-        double axial = 0;
-        double lateral = -speed2;
-
-        if (posx < lastX-0.1){
-            axial = 0.05;
-        } else if (posx > lastX+0.1) {
-            axial = -0.05;
-        }
-
-        if (pos.getHeading(AngleUnit.DEGREES)> 0.1){
-            yaw = 0.05;
-        } else if (pos.getHeading(AngleUnit.DEGREES) < -0.1){
-            yaw = -0.05;
-        }
-
-        double leftFrontPower = axial + lateral + yaw;
-        double rightFrontPower = axial - lateral - yaw;
-        double leftBackPower = axial - lateral + yaw;
-        double rightBackPower = axial + lateral - yaw;
-
-        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
-        max = Math.max(max, Math.abs(leftBackPower));
-        max = Math.max(max, Math.abs(rightBackPower));
-
-        if (max > speed2+0.1) {
-            leftFrontPower /= max;
-            rightFrontPower /= max;
-            leftBackPower /= max;
-            rightBackPower /= max;
-        }
-
-        leftFrontDrive.setPower(leftFrontPower);
-        rightFrontDrive.setPower(rightFrontPower);
-        leftBackDrive.setPower(leftBackPower);
-        rightBackDrive.setPower(rightBackPower);
-//        leftFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
-//        leftBackDrive.setPower(speed2 - (posx-lastX)*0.05);
-//        rightBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
-//        rightFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
-
-        //        comment out above and uncomment below if correction doesn't work
-
-//        leftFrontDrive.setPower(-speed2);
-//        leftBackDrive.setPower(speed2);
-//        rightBackDrive.setPower(-speed2);
-//        rightFrontDrive.setPower(speed2);
-    }
+//    public void strafeRight(){
+//        odo.update();
+//
+//        double newTime = getRuntime();
+//        double loopTime = newTime - oldTime;
+//        double frequency = 1 / loopTime;
+//        oldTime = newTime;
+//
+//        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+//        Pose2D pos = odo.getPosition();
+//        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("Position", data);
+//
+//        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+//        Pose2D vel = odo.getVelocity();
+//        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("Velocity", velocity);
+//
+//        double posx = pos.getX(DistanceUnit.INCH);
+//        double yaw = 0;
+//        double axial = 0;
+//        double lateral = speed2;
+//
+//        if (posx < lastX-0.1){
+//            axial = 0.05;
+//        } else if (posx > lastX+0.1) {
+//            axial = -0.05;
+//        }
+//
+//        if (pos.getHeading(AngleUnit.DEGREES)> 0.1){
+//            yaw = 0.05;
+//        } else if (pos.getHeading(AngleUnit.DEGREES) < -0.1){
+//            yaw = -0.05;
+//        }
+//
+//        double leftFrontPower = axial + lateral + yaw;
+//        double rightFrontPower = axial - lateral - yaw;
+//        double leftBackPower = axial - lateral + yaw;
+//        double rightBackPower = axial + lateral - yaw;
+//
+//        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+//        max = Math.max(max, Math.abs(leftBackPower));
+//        max = Math.max(max, Math.abs(rightBackPower));
+//
+//        if (max > speed2+0.1) {
+//            leftFrontPower /= max;
+//            rightFrontPower /= max;
+//            leftBackPower /= max;
+//            rightBackPower /= max;
+//        }
+//
+//        leftFrontDrive.setPower(leftFrontPower);
+//        rightFrontDrive.setPower(rightFrontPower);
+//        leftBackDrive.setPower(leftBackPower);
+//        rightBackDrive.setPower(rightBackPower);
+//
+////        leftFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
+////        leftBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
+////        rightBackDrive.setPower(speed2 - (posx-lastX)*0.05);
+////        rightFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
+//
+////        comment out above and uncomment below if correction doesn't work
+//
+////        leftFrontDrive.setPower(speed2);
+////        leftBackDrive.setPower(-speed2);
+////        rightBackDrive.setPower(speed2);
+////        rightFrontDrive.setPower(-speed2);
+//
+//    }
+//
+//    public void strafeLeft(){
+//        odo.update();
+//
+//        double newTime = getRuntime();
+//        double loopTime = newTime - oldTime;
+//        double frequency = 1 / loopTime;
+//        oldTime = newTime;
+//
+//        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+//        Pose2D pos = odo.getPosition();
+//        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("Position", data);
+//
+//        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+//        Pose2D vel = odo.getVelocity();
+//        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("Velocity", velocity);
+//
+//        double posx = pos.getX(DistanceUnit.INCH);
+//        double yaw = 0;
+//        double axial = 0;
+//        double lateral = -speed2;
+//
+//        if (posx < lastX-0.1){
+//            axial = 0.05;
+//        } else if (posx > lastX+0.1) {
+//            axial = -0.05;
+//        }
+//
+//        if (pos.getHeading(AngleUnit.DEGREES)> 0.1){
+//            yaw = 0.05;
+//        } else if (pos.getHeading(AngleUnit.DEGREES) < -0.1){
+//            yaw = -0.05;
+//        }
+//
+//        double leftFrontPower = axial + lateral + yaw;
+//        double rightFrontPower = axial - lateral - yaw;
+//        double leftBackPower = axial - lateral + yaw;
+//        double rightBackPower = axial + lateral - yaw;
+//
+//        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+//        max = Math.max(max, Math.abs(leftBackPower));
+//        max = Math.max(max, Math.abs(rightBackPower));
+//
+//        if (max > speed2+0.1) {
+//            leftFrontPower /= max;
+//            rightFrontPower /= max;
+//            leftBackPower /= max;
+//            rightBackPower /= max;
+//        }
+//
+//        leftFrontDrive.setPower(leftFrontPower);
+//        rightFrontDrive.setPower(rightFrontPower);
+//        leftBackDrive.setPower(leftBackPower);
+//        rightBackDrive.setPower(rightBackPower);
+////        leftFrontDrive.setPower(-speed2 - (posx-lastX)*0.05);
+////        leftBackDrive.setPower(speed2 - (posx-lastX)*0.05);
+////        rightBackDrive.setPower(-speed2 - (posx-lastX)*0.05);
+////        rightFrontDrive.setPower(speed2 - (posx-lastX)*0.05);
+//
+//        //        comment out above and uncomment below if correction doesn't work
+//
+////        leftFrontDrive.setPower(-speed2);
+////        leftBackDrive.setPower(speed2);
+////        rightBackDrive.setPower(-speed2);
+////        rightFrontDrive.setPower(speed2);
+//    }
 
     public void fluctuationTest(){
         odo.update();
@@ -425,6 +453,7 @@ public class PinpointAuto extends LinearOpMode {
         // Drive motor control logic
         while (pos.getX(DistanceUnit.INCH) < 29+distOff*blockNum && opModeIsActive()) {
             telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
+            heading = pos.getHeading(AngleUnit.DEGREES);
             // Update the lift motors while driving
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.8);
@@ -436,14 +465,14 @@ public class PinpointAuto extends LinearOpMode {
             lift_right.setPower(lift_left.getPower());
             // strafe diagonally if needed
             if (pos.getY(DistanceUnit.INCH) < placementOffset*blockNum){
-//                double leftFrontPower = axial + lateral + yaw;
-//                double rightFrontPower = axial - lateral - yaw;
-//                double leftBackPower = axial - lateral + yaw;
-//                double rightBackPower = axial + lateral - yaw;
-                leftFrontDrive.setPower(-0.3);
-                leftBackDrive.setPower(speed2);
-                rightBackDrive.setPower(-0.3);
-                rightFrontDrive.setPower(speed2);
+                axial = 0.4;
+                yaw = 0;
+                lateral = speed2;
+                strafe();
+//                leftFrontDrive.setPower(-0.3);
+//                leftBackDrive.setPower(speed2);
+//                rightBackDrive.setPower(-0.3);
+//                rightFrontDrive.setPower(speed2);
             } else {
                 // otherwise strafe forward
                 forward();
@@ -551,7 +580,10 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
-            strafeRight();
+            axial = 0;
+            yaw = 0;
+            lateral = speed2;
+//            strafeRight();
 //            if (pos.getX(DistanceUnit.INCH) < 22){
 //                leftFrontDrive.setPower(leftFrontDrive.getPower() - 0.05);
 //                leftBackDrive.setPower(leftBackDrive.getPower() - 0.05);
@@ -586,7 +618,11 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
-            strafeRight();
+            axial = 0;
+            yaw = 0;
+            lateral = speed2;
+            strafe();
+//            strafeRight();
             pos = odo.getPosition();
             odo.update();
 
@@ -663,7 +699,11 @@ public class PinpointAuto extends LinearOpMode {
 
         //  drive to the lane between the submersible and block
         while (pos.getY(DistanceUnit.INCH) > -46 - 5*numSamp && opModeIsActive()) {
-            strafeRight();
+            axial = 0;
+            yaw = 0;
+            lateral = speed2;
+            strafe();
+//            strafeRight();
             pos = odo.getPosition();
             odo.update();
             double dist = Math.abs(pos.getY(DistanceUnit.INCH) -45-5*numSamp);
@@ -704,7 +744,11 @@ public class PinpointAuto extends LinearOpMode {
 
 //        align with specimen
         while (pos.getY(DistanceUnit.INCH) < pickupY && opModeIsActive()) {
-            strafeLeft();
+            axial = 0;
+            yaw = 0;
+            lateral = -speed2;
+            strafe();
+//            strafeLeft();
             pos = odo.getPosition();
             odo.update();
             double dist = Math.abs(pos.getY(DistanceUnit.INCH) - pickupY);
@@ -761,7 +805,11 @@ public class PinpointAuto extends LinearOpMode {
 
 //        align with specimen
         while (pos.getY(DistanceUnit.INCH) > pickupY && opModeIsActive()) {
-            strafeRight();
+            axial = 0;
+            yaw = 0;
+            lateral = speed2;
+            strafe();
+//            strafeRight();
             pos = odo.getPosition();
             odo.update();
             double dist = Math.abs(pos.getY(DistanceUnit.INCH) - pickupY);
@@ -783,34 +831,6 @@ public class PinpointAuto extends LinearOpMode {
 
 //      grab specimen and bring it to place
         pickupClawAction();
-    }
-
-    public void specStrafe(){
-        odo.update();
-
-        double newTime = getRuntime();
-        double loopTime = newTime - oldTime;
-        double frequency = 1 / loopTime;
-        oldTime = newTime;
-
-        // Get the current Position (x & y in mm, and heading in degrees) of the robot
-        Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-
-        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
-        Pose2D vel = odo.getVelocity();
-        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Velocity", velocity);
-
-        //  align with submersible placement spot
-        while (pos.getY(DistanceUnit.INCH) < placementOffset * blockNum && opModeIsActive()) {
-            strafeLeft();
-            pos = odo.getPosition();
-            odo.update();
-        }
-        off();
-
     }
 
     @Override
@@ -983,25 +1003,21 @@ public class PinpointAuto extends LinearOpMode {
 
                 // place second specimen
                 pickupSpecial(); // go from drop off of last sample to specimen pick up area
-//                specStrafe(); // align the second specimen for placement
                 placeSpecimen(); // place the second specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place third specimen
                 pickup(); // go from submersible to specimen pick up area
-//                specStrafe(); // align the third specimen for placement
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place fourth specimen
                 pickup(); // go from submersible to specimen pick up area
-//                specStrafe(); // align the fourth specimen for placement
                 placeSpecimen(); // place the fourth specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place fifth specimen
                 pickup(); // go from submersible to specimen pick up area
-//                specStrafe(); // align the fourth specimen for placement
                 placeSpecimen(); // place the fourth specimen
                 blockNum += 1; // update how many blocks for alignment
 
