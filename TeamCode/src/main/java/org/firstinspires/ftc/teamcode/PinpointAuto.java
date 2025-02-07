@@ -79,16 +79,16 @@ public class PinpointAuto extends LinearOpMode {
     private double currentPosition1 = 0.3; // Start the servo at the middle position
     private int blockNum = 0;
     private int numSamp = 1;
-    private int sampX = 38;
+    private double sampX = 39;
     private int sampY = -47;
-    private int laneX = 22;
+    private int laneX = 26;
     private int laneY = -34;
-    private  int dropX = 18;
+    private  int dropX = 23;
     private double pickupX = 0.5; // way to high right now to not break the claw
     private int pickupY = -49;
-    private int placeX = 29;
+    private double placeX = 30.5;
     private int placeY = 20;
-    private int placementOffset = -3;
+    private double placementOffset = -3;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
     boolean moveStuff = true;
@@ -278,6 +278,8 @@ public class PinpointAuto extends LinearOpMode {
             } if (blockNum == 1){
 //                lift_target = 420;
                 lift_target = 420;
+            } if (blockNum == 3){
+                lift_target = 410;
             }
 
             liftPosition = false;
@@ -328,13 +330,16 @@ public class PinpointAuto extends LinearOpMode {
         off();
 
         // Wait for .2 seconds
-        sleep(200);
+        sleep(100);
         // Update the lift target after driving
         if (!liftPosition) {
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
             telemetry.update();
             useLiftEncoder = true;
             lift_target = 620;
+            if (blockNum>3){
+                lift_target =650;
+            }
         }
 
         //  pull claw back and lift scissor lift to place sample
@@ -422,7 +427,7 @@ public class PinpointAuto extends LinearOpMode {
             lateral = 0;
             move();
         }
-        off();
+//        off();
 
         //  drive to the lane between the submersible and block
         while (pos.getY(DistanceUnit.INCH) > laneY && opModeIsActive()) {
@@ -470,7 +475,7 @@ public class PinpointAuto extends LinearOpMode {
             odo.update();
 
             double dist = Math.abs(pos.getX(DistanceUnit.INCH) - sampX);
-            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
 
             targetX = sampX;
             targetY = -36;
@@ -479,7 +484,7 @@ public class PinpointAuto extends LinearOpMode {
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
 
-            axial = speed;
+            axial = speed2;
             lateral = 0;
 
             if (pos.getY(DistanceUnit.INCH) > targetY){
@@ -548,14 +553,14 @@ public class PinpointAuto extends LinearOpMode {
 //            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             targetX = dropX;
-            targetY = sampY- 5*numSamp;
+            targetY = sampY- 6*numSamp;
 
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.addLine("dropoff");
             telemetry.update();
 
-            axial = -speed;
+            axial = -speed2;
             lateral = 0;
 
             if (pos.getX(DistanceUnit.INCH) > targetY){
@@ -566,7 +571,7 @@ public class PinpointAuto extends LinearOpMode {
 
             move();
         }
-        off();
+//        off();
     }
 
     //        take numSamp as an argument and add that distance needed to be covered
@@ -598,23 +603,23 @@ public class PinpointAuto extends LinearOpMode {
             odo.update();
 
             double dist = Math.abs(pos.getX(DistanceUnit.INCH) - sampX);
-            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
 
-            axial = speed;
-            lateral = 0;
+            axial = speed2;
+            lateral = -0.15;
 
-            if (pos.getX(DistanceUnit.INCH) > targetY){
-                lateral = 0.02;
-            } else if (pos.getX(DistanceUnit.INCH) < targetY - 0.1){
-                lateral = -0.02;
-            }
+//            if (pos.getX(DistanceUnit.INCH) > targetY){
+//                lateral = 0.02;
+//            } else if (pos.getX(DistanceUnit.INCH) < targetY - 0.1){
+//                lateral = -0.02;
+//            }
 
             move();
         }
 //        off();
 
         //  drive behind block
-        while (pos.getY(DistanceUnit.INCH) > sampY - 5.5*numSamp && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > sampY - 6.5*numSamp && opModeIsActive()) {
             pos = odo.getPosition();
             odo.update();
 
@@ -622,7 +627,7 @@ public class PinpointAuto extends LinearOpMode {
             speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
 
             targetX = sampX;
-            targetY = sampY - 5*numSamp;
+            targetY = sampY - 6*numSamp;
 
             axial = 0;
             yaw = 0;
@@ -653,7 +658,7 @@ public class PinpointAuto extends LinearOpMode {
         telemetry.addData("Velocity", velocity);
 
 //      back away from last pushed sample
-        while (pos.getX(DistanceUnit.INCH) < dropX+1 && opModeIsActive()) {
+        while (pos.getX(DistanceUnit.INCH) < dropX-1.5 && opModeIsActive()) {
             pos = odo.getPosition();
             odo.update();
 
@@ -661,7 +666,7 @@ public class PinpointAuto extends LinearOpMode {
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
 
-            axial = speed;
+            axial = 0.4;
             lateral = 0;
 
             move();
@@ -694,7 +699,7 @@ public class PinpointAuto extends LinearOpMode {
             pos = odo.getPosition();
             odo.update();
 
-            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX+distOff*blockNum);
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (pickupX+distOff*blockNum));
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             axial = -speed;
@@ -738,7 +743,7 @@ public class PinpointAuto extends LinearOpMode {
 //            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - 20);
 //            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
-                targetX = 20;
+                targetX = 25;
                 targetY = placementOffset * blockNum;
 
                 axial = -speed;
@@ -760,7 +765,7 @@ public class PinpointAuto extends LinearOpMode {
             targetX = 20;
             targetY = placementOffset*blockNum;
 
-            axial = -0.2;
+            axial = -0.22;
             lateral = speed2;
 
             move();
@@ -774,7 +779,7 @@ public class PinpointAuto extends LinearOpMode {
             pos = odo.getPosition();
             odo.update();
 
-            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX+distOff*blockNum);
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (pickupX+distOff*blockNum));
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             axial = -speed;
@@ -951,6 +956,7 @@ public class PinpointAuto extends LinearOpMode {
                 dropOff();
                 numSamp += 1;
 
+                sampX -= 7;
                 // go to second sample and drop it off at human player
                 dropToSamp();
                 dropOff();
@@ -960,23 +966,27 @@ public class PinpointAuto extends LinearOpMode {
 //                dropToSamp();
 //                dropOff();
 
+                pickupX = 5;
                 // place second specimen
                 pickupSpecial(); // go from drop off of last sample to specimen pick up area
                 placeSpecimen(); // place the second specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place third specimen
-                pickupY += 14;
+                pickupX = 3;
+                pickupY += 16;
+                placeX -= 0.5;
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
 
-                pickupX = -1;
+                pickupX = -4;
+                placeX -= 3.;
 
                 // place fourth specimen
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the fourth specimen
-                blockNum += 2.5; // update how many blocks for alignment
+                blockNum += 1; // update how many blocks for alignment
 
                 // place fifth specimen
                 pickup(); // go from submersible to specimen pick up area
