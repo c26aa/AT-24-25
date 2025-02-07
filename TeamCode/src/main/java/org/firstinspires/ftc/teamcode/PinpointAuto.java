@@ -95,7 +95,7 @@ public class PinpointAuto extends LinearOpMode {
     boolean liftPosition = true;
     boolean done = false;
     private double heading = 0.0;
-//    private int distOff = 9;
+    //    private int distOff = 9;
     private int distOff = 2;
     private double maxSpeed = 0.75;
     private double speed = maxSpeed;
@@ -383,7 +383,7 @@ public class PinpointAuto extends LinearOpMode {
         }
     }
 
-// this function goes from the placed specimen to the first sample on the field
+    // this function goes from the placed specimen to the first sample on the field
     public void subToSamp(){
         odo.update();
 
@@ -424,7 +424,7 @@ public class PinpointAuto extends LinearOpMode {
         }
         off();
 
-    //  drive to the lane between the submersible and block
+        //  drive to the lane between the submersible and block
         while (pos.getY(DistanceUnit.INCH) > laneY && opModeIsActive()) {
             targetX = laneX;
             targetY = laneY;
@@ -464,7 +464,7 @@ public class PinpointAuto extends LinearOpMode {
 //        while (pos.getY(DistanceUnit.INCH) > -35 && opModeIsActive())
         off();
 
-    // strafe along side a block to be able to drive behind it next
+        // strafe along side a block to be able to drive behind it next
         while (pos.getX(DistanceUnit.INCH) < sampX && opModeIsActive()) {
             pos = odo.getPosition();
             odo.update();
@@ -492,7 +492,7 @@ public class PinpointAuto extends LinearOpMode {
         }
 //        off();
 
-    //    go directly behind a block
+        //    go directly behind a block
         while (pos.getY(DistanceUnit.INCH) > sampY && opModeIsActive()) {
             pos = odo.getPosition();
             odo.update();
