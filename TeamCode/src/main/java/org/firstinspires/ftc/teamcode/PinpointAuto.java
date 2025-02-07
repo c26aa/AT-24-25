@@ -86,7 +86,7 @@ public class PinpointAuto extends LinearOpMode {
     private  int dropX = 23;
     private double pickupX = 0.5; // way to high right now to not break the claw
     private int pickupY = -49;
-    private double placeX = 30.5;
+    private double placeX = 30;
     private int placeY = 20;
     private double placementOffset = -3;
     public boolean useLiftEncoder = false;
@@ -293,8 +293,8 @@ public class PinpointAuto extends LinearOpMode {
             double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (placeX+distOff*blockNum));
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
-            targetX = 29+distOff*blockNum;
-            targetY = placementOffset*(blockNum*2);
+            targetX = placeX+distOff*blockNum;
+            targetY = placementOffset*(blockNum);
             telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
             heading = pos.getHeading(AngleUnit.DEGREES);
             // Update the lift motors while driving
@@ -308,12 +308,12 @@ public class PinpointAuto extends LinearOpMode {
             }
             lift_right.setPower(lift_left.getPower());
 
-            if (blockNum > 0 && pos.getY(DistanceUnit.INCH) < -7 + placementOffset*blockNum){
+            if (blockNum > 0 && pos.getY(DistanceUnit.INCH) < -7 + targetY){
                 axial = 0.3;
                 lateral = -speed2;
-            } else if (blockNum > 0 && pos.getY(DistanceUnit.INCH) > -7 + placementOffset*blockNum+0.1){
+            } else if (blockNum > 0 && pos.getY(DistanceUnit.INCH) > -7 + targetY+0.1){
                 axial = 0.4;
-                lateral = 0.05;
+                lateral = 0.2;
             } else {
                 axial = speed;
                 lateral= 0;
@@ -975,13 +975,13 @@ public class PinpointAuto extends LinearOpMode {
                 // place third specimen
                 pickupX = 3;
                 pickupY += 16;
-                placeX -= 0.5;
+                placeX = 0.0;
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 pickupX = -4;
-                placeX -= 3.;
+                placeX -= 2.5;
 
                 // place fourth specimen
                 pickup(); // go from submersible to specimen pick up area
