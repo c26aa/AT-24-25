@@ -18,6 +18,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private static final double CHANGE_AMOUNT = 0.005;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
+    boolean resetLift = true;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -338,13 +339,26 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             }
 
+            if (gamepad1.dpad_right && resetLift){
+                lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                telemetry.addLine("Switched to manual control mode.");
+                lift_left.setPower(SCISSORLIFT_POWER);
+                lift_right.setPower(lift_left.getPower());
+                new Thread(() -> {
+                    sleep(5000); // Adjust this delay if necessary
+                    resetLift = false;
+                    lift_left.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    lift_left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                }).start();
+
+            }
+
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Slow Mode", slowMode ? "Enabled" : "Disabled");
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("encoder_value_left", lift_encoder_value);
-            telemetry.addData("encoder_value_right", lift_encoder_value2);
             telemetry.update();
 
 //            if (gamepad2.right_bumper) { // active intake code
