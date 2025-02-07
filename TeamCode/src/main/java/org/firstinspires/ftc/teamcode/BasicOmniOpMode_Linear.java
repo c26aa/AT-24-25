@@ -16,6 +16,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private double currentPosition = 0.8;
     private double currentPosition1 = 0.3; // Start the servo at the middle position
     private static final double CHANGE_AMOUNT = 0.005;
+    private static final double CHANGE_AMOUNT1 = 0.002;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
     boolean resetLift = true;
@@ -235,16 +236,13 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 top_arm.setPosition(OUTTAKE_ARM_FRONT+0.03);
                 slide_left.setPosition(0.6);
                 slide_right.setPosition(0.5);
-                sleep(1000);
-                outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
-                sleep(500);
-                claw.setPosition(CLAW_OPEN);
-                top_arm.setPosition(OUTTAKE_ARM_BACK);
-//                lift_target= 1450;
-//                useLiftEncoder = true;
-//                sleep(2000);
-
-
+                new Thread(() -> {
+                    sleep(1000);
+                    outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
+                    sleep(500);
+                    claw.setPosition(CLAW_OPEN);
+                    top_arm.setPosition(OUTTAKE_ARM_BACK);
+                }).start();
             }
 
 
@@ -257,11 +255,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
 
             if (gamepad2.left_stick_x > 0.2){
-               left_right_hinge.setPosition(HINGE_LEFT);
+                currentPosition += CHANGE_AMOUNT1;
+                currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
+                left_right_hinge.setPosition(currentPosition);
             }
             if (gamepad2.left_stick_x < -0.2){
-
-                left_right_hinge.setPosition(HINGE_RIGHT);
+                currentPosition -= CHANGE_AMOUNT1;
+                currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
+                left_right_hinge.setPosition(currentPosition);
 
             }
 
@@ -320,17 +321,17 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 // Open the claw after a short delay (if needed)
                 new Thread(() -> {
                     sleep(500); // Adjust this delay if necessary
-                    outtake_claw.setPosition(0.2);
+                    outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                     sleep(1000); // Adjust this delay if necessary
-                    top_arm.setPosition(0.1);
+                    top_arm.setPosition(OUTTAKE_ARM_BACK);
                 }).start();
             }
             if (gamepad1.y) {
                 bar_left.setPosition(0.4);
                 bar_right.setPosition(0.76);
-                left_right_hinge.setPosition(0.72);
-                up_down_hinge.setPosition(0.5);
-                outtake_claw.setPosition(0.45);
+                left_right_hinge.setPosition(HINGE_MIDDLE);
+                up_down_hinge.setPosition(WRIST_MIDDLE);
+                outtake_claw.setPosition(CLAW_OPEN);
                 useLiftEncoder = true;
                 lift_target = lift_left.getCurrentPosition() + 130;
                 sleep(1000);
@@ -342,7 +343,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad1.dpad_right && resetLift){
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
-                lift_left.setPower(SCISSORLIFT_POWER);
+                lift_left.setPower(-SCISSORLIFT_POWER);
                 lift_right.setPower(lift_left.getPower());
                 new Thread(() -> {
                     sleep(5000); // Adjust this delay if necessary

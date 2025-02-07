@@ -4,7 +4,7 @@ public class Constants {
 
 
 
-    static final double CLAW_OPEN = .47; //.8
+    static final double CLAW_OPEN = .43;
     static final double CLAW_CLOSED = .78;
 
     static final double WRIST_UP = 0.3;
@@ -20,7 +20,7 @@ public class Constants {
 
     static final double OUTTAKE_ARM_FRONT = .70; //.8
     static final double OUTTAKE_ARM_BACK = .00;
-    static final double OUTTAKE_ARM_BUCKET = .2;
+    static final double OUTTAKE_ARM_BUCKET = .3;
 
     static final double LEFT_SLIDES_OUT = .8;
     static final double LEFT_SLIDES_IN = .2;
