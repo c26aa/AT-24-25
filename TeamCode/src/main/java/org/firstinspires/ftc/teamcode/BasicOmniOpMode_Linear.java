@@ -6,12 +6,36 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.Servo;
 import static org.firstinspires.ftc.teamcode.Constants.*;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.Servo;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import java.util.List;
 
 
 
 @TeleOp(name = "Atomic Tele-Op", group = "Linear OpMode")
 //@Disabled
 public class BasicOmniOpMode_Linear extends LinearOpMode {
+
+    //limelight stuff
+    private Limelight3A limelight;
+    private Servo leftRightHinge = null;
+    private Servo barl = null;
+    private Servo barr = null;
+    final double max_pos = HINGE_LEFT;
+    final double mid_pos = HINGE_MIDDLE;
+    final double min_pos = HINGE_RIGHT;
+    final double pos_rate = -0.004;
+    private double bld = 0.38;
+    private double brd = 0.77;
+    private double blm = bld + 0.08;
+    private double brm = brd - 0.08;
+
+
+
 
     private double currentPosition = 0.8;
     private double currentPosition1 = 0.3; // Start the servo at the middle position
@@ -86,6 +110,27 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         lift_right.setMode((DcMotor.RunMode.RUN_WITHOUT_ENCODER));
         lift_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lift_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        leftRightHinge = hardwareMap.get(Servo.class, "hlr");
+        barl = hardwareMap.get(Servo.class, "brl");
+        barr = hardwareMap.get(Servo.class, "brr");
+
+        telemetry.setMsTransmissionInterval(500);
+
+        limelight.pipelineSwitch(0);
+
+        /*
+         * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
+         */
+        limelight.start();
+
+        telemetry.addData(">", "Robot Ready.  Press Play.");
+        telemetry.update();
+        LLStatus status = limelight.getStatus();
+        LLResult result = limelight.getLatestResult();
+
 
         telemetry.addData("Status", "Initialized"); // print to control hub
         telemetry.update();
@@ -276,7 +321,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad1.b && slowMode == false) {
                 slowMode = !slowMode;
             }
-            if (gamepad1.x && slowMode == true) {
+            if (gamepad1.b && slowMode == true) {
                 slowMode = !slowMode;
             }
 //            if (gamepad1.a){//get ready to clip
@@ -340,7 +385,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             }
 
-            if (gamepad1.dpad_right && resetLift){
+            if (gamepad1.x && resetLift){
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
                 lift_left.setPower(-SCISSORLIFT_POWER);
@@ -354,6 +399,122 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             }
 
+
+
+
+            //limelight code
+            telemetry.addLine("opmode is active!!");
+            if (gamepad2.right_stick_x > 0.2) {
+                limelight.pipelineSwitch(0);
+                leftRightHinge.setPosition(mid_pos);
+                barl.setPosition(blm);
+                barr.setPosition(brm);
+                sleep(200);
+
+                status = limelight.getStatus();
+                telemetry.addData("Name", "%s",
+                        status.getName());
+                telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+                        status.getTemp(), status.getCpu(), (int) status.getFps());
+                telemetry.addData("Pipeline", "Index: %d, Type: %s",
+                        status.getPipelineIndex(), status.getPipelineType());
+                telemetry.update();
+
+                result = limelight.getLatestResult();
+                if (result != null) {
+                    // Access general information
+                    Pose3D botpose = result.getBotpose();
+                    double captureLatency = result.getCaptureLatency();
+                    double targetingLatency = result.getTargetingLatency();
+                    double parseLatency = result.getParseLatency();
+                    telemetry.addData("LL Latency", captureLatency + targetingLatency);
+                    telemetry.addData("Parse Latency", parseLatency);
+
+                    if (result.isValid()) {
+                        telemetry.addData("tx", result.getTx());
+                        telemetry.addData("txnc", result.getTxNC());
+                        telemetry.addData("ty", result.getTy());
+                        telemetry.addData("tync", result.getTyNC());
+
+//                    if (result.getTx() > 0){
+//                        top_arm.setPosition(0.1);// back side
+//                    } else {
+//                        top_arm.setPosition(0.8);
+//                    }
+
+                        double arm_pos = mid_pos;
+                        arm_pos += result.getTx() * pos_rate;
+                        if (arm_pos < min_pos) {
+                            arm_pos = min_pos;
+                        } else if (arm_pos > max_pos) {
+                            arm_pos = max_pos;
+                        }
+
+                        leftRightHinge.setPosition(arm_pos);
+
+
+                        // Access color results
+                        List<LLResultTypes.ColorResult> colorResults = result.getColorResults();
+                        for (LLResultTypes.ColorResult cr : colorResults) {
+                            telemetry.addData("Color", "X: %.2f, Y: %.2f", cr.getTargetXDegrees(), cr.getTargetYDegrees());
+                        }
+                    }
+                }
+                sleep(200);
+            }
+            if (gamepad2.right_stick_x < -0.2){
+                leftRightHinge.setPosition(mid_pos);
+                limelight.pipelineSwitch(1);
+                status = limelight.getStatus();
+                telemetry.addData("Name", "%s",
+                        status.getName());
+                telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+                        status.getTemp(), status.getCpu(),(int)status.getFps());
+                telemetry.addData("Pipeline", "Index: %d, Type: %s",
+                        status.getPipelineIndex(), status.getPipelineType());
+
+                result = limelight.getLatestResult();
+                if (result != null) {
+                    // Access general information
+                    Pose3D botpose = result.getBotpose();
+                    double captureLatency = result.getCaptureLatency();
+                    double targetingLatency = result.getTargetingLatency();
+                    double parseLatency = result.getParseLatency();
+                    telemetry.addData("LL Latency", captureLatency + targetingLatency);
+                    telemetry.addData("Parse Latency", parseLatency);
+
+                    if (result.isValid()) {
+                        telemetry.addData("tx", result.getTx());
+                        telemetry.addData("txnc", result.getTxNC());
+                        telemetry.addData("ty", result.getTy());
+                        telemetry.addData("tync", result.getTyNC());
+
+//                    if (result.getTx() > 0){
+//                        top_arm.setPosition(0.1);// back side
+//                    } else {
+//                        top_arm.setPosition(0.8);
+//                    }
+
+                        double arm_pos = mid_pos;
+                        arm_pos += result.getTx() * pos_rate;
+                        if (arm_pos < min_pos) {
+                            arm_pos = min_pos;
+                        } else if (arm_pos > max_pos) {
+                            arm_pos = max_pos;
+                        }
+
+                        leftRightHinge.setPosition(arm_pos);
+
+
+                        // Access color results
+                        List<LLResultTypes.ColorResult> colorResults = result.getColorResults();
+                        for (LLResultTypes.ColorResult cr : colorResults) {
+                            telemetry.addData("Color", "X: %.2f, Y: %.2f", cr.getTargetXDegrees(), cr.getTargetYDegrees());
+                        }
+                    }
+                }
+                sleep(50);
+            }
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Slow Mode", slowMode ? "Enabled" : "Disabled");
@@ -374,5 +535,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 //            }
 
         }
+        limelight.stop();
     }
 }
