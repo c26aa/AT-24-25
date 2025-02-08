@@ -31,8 +31,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     final double pos_rate = -0.004;
     private double bld = 0.38;
     private double brd = 0.77;
-    private double blm = bld + 0.1;
-    private double brm = brd - 0.1;
+    private double blm = bld + 0.9;
+    private double brm = brd - 0.9;
 
 
 
@@ -189,7 +189,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 currentPosition1 = Math.min(Math.max(currentPosition1, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
                 slide_right.setPosition(currentPosition1);
 
-
             }
 
             if (gamepad2.right_trigger > 0.1) {//
@@ -271,16 +270,44 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_MIDDLE);
             }
+            // old pass thru
+//            if (gamepad2.x) {//handoff
+//                claw.setPosition(CLAW_CLOSED-0.02);
+//                outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
+//                bar_left.setPosition(0.65);
+//                bar_right.setPosition(0.51);
+//                left_right_hinge.setPosition(HINGE_MIDDLE);
+//                up_down_hinge.setPosition(0.0);
+//                top_arm.setPosition(OUTTAKE_ARM_FRONT-0.05);
+//                slide_left.setPosition(0.67);
+//                slide_right.setPosition(0.43);
+//                new Thread(() -> {
+//                    sleep(1000);
+//                    outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
+//                    sleep(500);
+//                    claw.setPosition(CLAW_OPEN);
+//                    top_arm.setPosition(OUTTAKE_ARM_BACK);
+//                }).start();
+//            }
+
+            // BERMAN's PASS THRU IDEA
             if (gamepad2.x) {//handoff
-                claw.setPosition(CLAW_CLOSED-0.02);
                 outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
+                top_arm.setPosition(OUTTAKE_ARM_FRONT-0.05);
+                sleep(400);
+                claw.setPosition(CLAW_CLOSED-0.02);
                 bar_left.setPosition(0.65);
                 bar_right.setPosition(0.51);
                 left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(0.0);
-                top_arm.setPosition(OUTTAKE_ARM_FRONT-0.05);
-                slide_left.setPosition(0.67);
-                slide_right.setPosition(0.43);
+                sleep(200);
+
+                double inAmount = 0.1; // lower will be more in, don't make less than 0 or greater than 0.6
+                double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
+                double rightPos = RIGHT_SLIDES_IN + inAmount;
+                slide_left.setPosition(leftPos);
+                slide_right.setPosition(rightPos);
+
                 new Thread(() -> {
                     sleep(1000);
                     outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
@@ -460,6 +487,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                             telemetry.update();
                         }
 
+                        // arm down
                         sleep(200);
                         bar_left.setPosition(0.38);
                         bar_right.setPosition(0.77);
@@ -474,7 +502,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         double slide_posL = slide_left.getPosition();
                         double slide_posR = slide_right.getPosition();
 
-                        double next_posL = slide_posL + distY*0.02;
+                        double next_posL = slide_posL - distY*0.02;
                         double next_posR = slide_posR + distY*0.02;
 
                         telemetry.addData("intended slide position", next_posR);

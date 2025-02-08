@@ -964,14 +964,16 @@ public class PinpointAuto extends LinearOpMode {
 //                dropOff();
 
                 // place second specimen
-                pickupX += 3;
+                pickupX += 4;
+//                pickupX += 3;
                 pickupSpecial(); // go from drop off of last sample to specimen pick up area
                 placeSpecimen(); // place the second specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place third specimen
                 pickupY += 14;
-                pickupX -= 4;
+                pickupX -= 5;
+//                pickupX -= 4;
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
