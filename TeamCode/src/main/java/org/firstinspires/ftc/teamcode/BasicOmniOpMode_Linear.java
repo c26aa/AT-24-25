@@ -31,8 +31,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     final double pos_rate = -0.004;
     private double bld = 0.38;
     private double brd = 0.77;
-    private double blm = bld + 0.08;
-    private double brm = brd - 0.08;
+    private double blm = bld + 0.1;
+    private double brm = brd - 0.1;
 
 
 
@@ -210,10 +210,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             if (useLiftEncoder) {
                 if (gamepad2.dpad_right) {// set lift targets
-                    lift_target = 430;
+                    lift_target = 470;
                     // Move lift up using encoders
                 } else if (gamepad2.dpad_left) {
-                    lift_target = 250;
+                    lift_target = 1400;
                     // Move lift down using encoders
                 }
                 //NOTE TO SELF: IMPLEMENT MORE ROBUST CORRECTION MECHANISM
@@ -258,16 +258,16 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
 
             if (gamepad2.b) {//regular pick up
-                bar_left.setPosition(0.38);
-                bar_right.setPosition(0.77);
-                left_right_hinge.setPosition(HINGE_MIDDLE);
+                bar_left.setPosition(0.39);
+                bar_right.setPosition(0.76);
+//                left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_DOWN);
 
             }
 
             if (gamepad2.a) {//claw middle
-                bar_left.setPosition(0.4);
-                bar_right.setPosition(0.76);
+                bar_left.setPosition(0.44);
+                bar_right.setPosition(0.72);
                 left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_MIDDLE);
             }
@@ -278,9 +278,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 bar_right.setPosition(0.51);
                 left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(0.0);
-                top_arm.setPosition(OUTTAKE_ARM_FRONT+0.03);
-                slide_left.setPosition(0.6);
-                slide_right.setPosition(0.5);
+                top_arm.setPosition(OUTTAKE_ARM_FRONT-0.05);
+                slide_left.setPosition(0.67);
+                slide_right.setPosition(0.43);
                 new Thread(() -> {
                     sleep(1000);
                     outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
@@ -299,12 +299,12 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             }
 
-            if (gamepad2.left_stick_x > 0.2){
+            if (gamepad2.left_stick_x < -0.2){
                 currentPosition += CHANGE_AMOUNT1;
                 currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
                 left_right_hinge.setPosition(currentPosition);
             }
-            if (gamepad2.left_stick_x < -0.2){
+            if (gamepad2.left_stick_x > 0.2){
                 currentPosition -= CHANGE_AMOUNT1;
                 currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
                 left_right_hinge.setPosition(currentPosition);
@@ -361,7 +361,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
             if (gamepad1.a) {
                 useLiftEncoder = true;
-                lift_target = lift_left.getCurrentPosition() + 200; // Set the lift target
+                lift_target = lift_left.getCurrentPosition() + 250; // Set the lift target
 
                 // Open the claw after a short delay (if needed)
                 new Thread(() -> {
@@ -372,13 +372,13 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 }).start();
             }
             if (gamepad1.y) {
-                bar_left.setPosition(0.4);
-                bar_right.setPosition(0.76);
+                bar_left.setPosition(0.44);
+                bar_right.setPosition(0.72);
                 left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_MIDDLE);
                 outtake_claw.setPosition(CLAW_OPEN);
                 useLiftEncoder = true;
-                lift_target = lift_left.getCurrentPosition() + 130;
+                lift_target = lift_left.getCurrentPosition() + 170;
                 sleep(1000);
                 top_arm.setPosition(0.8);
 
@@ -404,12 +404,18 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             //limelight code
             telemetry.addLine("opmode is active!!");
-            if (gamepad2.right_stick_x > 0.2) {
-                limelight.pipelineSwitch(0);
+            if (gamepad2.right_stick_x > 0.2 || gamepad2.right_stick_x < -0.2){
+                if (gamepad2.right_stick_x > 0.2) {
+                    limelight.pipelineSwitch(0);
+                } else {
+                    limelight.pipelineSwitch(1);
+                }
+
                 leftRightHinge.setPosition(mid_pos);
                 barl.setPosition(blm);
                 barr.setPosition(brm);
-                sleep(200);
+                up_down_hinge.setPosition(WRIST_MIDDLE);
+                sleep(400);
 
                 status = limelight.getStatus();
                 telemetry.addData("Name", "%s",
@@ -436,22 +442,60 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         telemetry.addData("ty", result.getTy());
                         telemetry.addData("tync", result.getTyNC());
 
-//                    if (result.getTx() > 0){
-//                        top_arm.setPosition(0.1);// back side
-//                    } else {
-//                        top_arm.setPosition(0.8);
-//                    }
-
                         double arm_pos = mid_pos;
                         arm_pos += result.getTx() * pos_rate;
+                        double arm_pos_new = mid_pos;
                         if (arm_pos < min_pos) {
-                            arm_pos = min_pos;
+                            arm_pos_new = min_pos;
                         } else if (arm_pos > max_pos) {
-                            arm_pos = max_pos;
+                            arm_pos_new = max_pos;
                         }
 
-                        leftRightHinge.setPosition(arm_pos);
+                        if (arm_pos_new > 0 && arm_pos_new < 1){
+                            leftRightHinge.setPosition(arm_pos_new);
+                            telemetry.addData("arm pos position good", arm_pos_new);
+                            telemetry.update();
+                        } else {
+                            telemetry.addData("arm pos position wrong", arm_pos_new);
+                            telemetry.update();
+                        }
 
+                        sleep(200);
+                        bar_left.setPosition(0.38);
+                        bar_right.setPosition(0.77);
+
+                        double arm_length = 18;
+                        double clawDist = Math.sqrt(arm_length*arm_length - (result.getTx()*result.getTx()));
+                        double distY = result.getTy() - clawDist;
+
+                        telemetry.addData("dist y", distY);
+                        telemetry.update();
+
+                        double slide_posL = slide_left.getPosition();
+                        double slide_posR = slide_right.getPosition();
+
+                        double next_posL = slide_posL + distY*0.02;
+                        double next_posR = slide_posR + distY*0.02;
+
+                        telemetry.addData("intended slide position", next_posR);
+                        telemetry.update();
+
+                        double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
+                        double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
+
+                        if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1){
+                            telemetry.addData("slide position", new_posL);
+                            telemetry.addData("slide position", new_posR);
+                            telemetry.update();
+                            slide_left.setPosition(new_posL);
+                            slide_right.setPosition(new_posR);
+                        } else {
+                            telemetry.addData("slide position wrong", new_posL);
+                            telemetry.addData("slide position wrong", new_posR);
+                            telemetry.update();
+                        }
+
+                        claw.setPosition(CLAW_OPEN);
 
                         // Access color results
                         List<LLResultTypes.ColorResult> colorResults = result.getColorResults();
@@ -460,60 +504,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         }
                     }
                 }
-                sleep(200);
-            }
-            if (gamepad2.right_stick_x < -0.2){
-                leftRightHinge.setPosition(mid_pos);
-                limelight.pipelineSwitch(1);
-                status = limelight.getStatus();
-                telemetry.addData("Name", "%s",
-                        status.getName());
-                telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
-                        status.getTemp(), status.getCpu(),(int)status.getFps());
-                telemetry.addData("Pipeline", "Index: %d, Type: %s",
-                        status.getPipelineIndex(), status.getPipelineType());
-
-                result = limelight.getLatestResult();
-                if (result != null) {
-                    // Access general information
-                    Pose3D botpose = result.getBotpose();
-                    double captureLatency = result.getCaptureLatency();
-                    double targetingLatency = result.getTargetingLatency();
-                    double parseLatency = result.getParseLatency();
-                    telemetry.addData("LL Latency", captureLatency + targetingLatency);
-                    telemetry.addData("Parse Latency", parseLatency);
-
-                    if (result.isValid()) {
-                        telemetry.addData("tx", result.getTx());
-                        telemetry.addData("txnc", result.getTxNC());
-                        telemetry.addData("ty", result.getTy());
-                        telemetry.addData("tync", result.getTyNC());
-
-//                    if (result.getTx() > 0){
-//                        top_arm.setPosition(0.1);// back side
-//                    } else {
-//                        top_arm.setPosition(0.8);
-//                    }
-
-                        double arm_pos = mid_pos;
-                        arm_pos += result.getTx() * pos_rate;
-                        if (arm_pos < min_pos) {
-                            arm_pos = min_pos;
-                        } else if (arm_pos > max_pos) {
-                            arm_pos = max_pos;
-                        }
-
-                        leftRightHinge.setPosition(arm_pos);
-
-
-                        // Access color results
-                        List<LLResultTypes.ColorResult> colorResults = result.getColorResults();
-                        for (LLResultTypes.ColorResult cr : colorResults) {
-                            telemetry.addData("Color", "X: %.2f, Y: %.2f", cr.getTargetXDegrees(), cr.getTargetYDegrees());
-                        }
-                    }
-                }
-                sleep(50);
             }
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());

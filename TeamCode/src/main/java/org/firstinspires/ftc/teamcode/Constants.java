@@ -11,14 +11,14 @@ public class Constants {
     static final double WRIST_MIDDLE = 0.6;
     static final double WRIST_DOWN = 1.0;
     
-    static final double HINGE_LEFT = 1.0;
+    static final double HINGE_LEFT = 0.99;
     static final double HINGE_MIDDLE = 0.8;
     static final double HINGE_RIGHT = 0.6;
 
     static final double OUTTAKE_CLAW_OPEN = .2; //.8
     static final double OUTTAKE_CLAW_CLOSED = .45;
 
-    static final double OUTTAKE_ARM_FRONT = .70; //.8
+    static final double OUTTAKE_ARM_FRONT = .8; //.8
     static final double OUTTAKE_ARM_BACK = .00;
     static final double OUTTAKE_ARM_BUCKET = .3;
 
