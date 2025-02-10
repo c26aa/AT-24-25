@@ -609,7 +609,7 @@ public class PinpointAuto extends LinearOpMode {
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             axial = speed;
-            lateral = -0.15;
+            lateral = -0.2;
 
 //            if (pos.getX(DistanceUnit.INCH) > targetY){
 //                lateral = 0.02;

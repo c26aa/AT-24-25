@@ -47,13 +47,13 @@ public class SampleAuto extends LinearOpMode {
 
     private int blockNum = 0;
     private double tolerance = 0.1;
-    private int bucketX = 12;
-    private int bucketY = 20;
-    private int pickupX = 15;
-    private int pickupY = 5;
-    private int lift_top = 750;
+    private double bucketX = 7;
+    private int bucketY = 26;
+    private double pickupX = bucketX;
+    private int pickupY = 15;
+    private int lift_top = 1220;
     private int lift_bottom = 0;
-    private double placeHeading = -20;
+    private double placeHeading = -40;
     boolean moveStuff = true;
     boolean liftPosition = true;
     private double heading = 0.0;
@@ -63,11 +63,11 @@ public class SampleAuto extends LinearOpMode {
     private double maxSpeed2 = 0.95;
     private double speed2 = maxSpeed2; // max value is 0.89
     private double correctionSpeed = 0.1;
-    private double headingCorrectSpeed = 0.165;
+    private double headingCorrectSpeed = 0.3;
     private double yawSpeed = 0.08;
     private double bigYawSpeed = 0.4;
     private double targetX = 0;
-    private double logAdd = 1.01;
+    private double logAdd = 1.1;
     private double axial = 0.0;
     private double lateral = 0.0;
     private double yaw = 0.0;
@@ -100,6 +100,22 @@ public class SampleAuto extends LinearOpMode {
         rightBackDrive.setPower(0);
         rightFrontDrive.setPower(0);
         headingCorrect();
+    }
+
+    public void clawPickPos(){
+        bar_left.setPosition(0.383);
+        bar_right.setPosition(0.767);
+        left_right_hinge.setPosition(HINGE_MIDDLE);
+        up_down_hinge.setPosition(WRIST_DOWN);
+    }
+
+    public void clawMidPos(){
+//        bar_left.setPosition(0.44);
+//        bar_right.setPosition(0.72);
+        bar_left.setPosition(0.54);
+        bar_right.setPosition(0.62);
+        left_right_hinge.setPosition(HINGE_MIDDLE);
+        up_down_hinge.setPosition(WRIST_MIDDLE);
     }
 
     public void headingCorrect(){
@@ -208,15 +224,12 @@ public class SampleAuto extends LinearOpMode {
     // pick up sample and pass thru
     public void passThru(){
         // position intake arm
-        bar_left.setPosition(0.38);
-        bar_right.setPosition(0.77);
-        left_right_hinge.setPosition(0.72);
-        up_down_hinge.setPosition(1.0);
+        clawPickPos();
         sleep(100);
 
         // close claw
         claw.setPosition(0.91);
-        sleep(100);
+        sleep(300);
         // open outtake claw and move to correct position
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
         top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
@@ -240,8 +253,11 @@ public class SampleAuto extends LinearOpMode {
             outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
             sleep(500);
             claw.setPosition(CLAW_OPEN);
-            top_arm.setPosition(OUTTAKE_ARM_BACK);
+//            top_arm.setPosition(OUTTAKE_ARM_BACK);
         }).start();
+
+        sleep(200);
+        clawMidPos();
     }
 
     // place the sample
@@ -263,7 +279,7 @@ public class SampleAuto extends LinearOpMode {
             odo.update();
 
             double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX));
-            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+            speed = Math.min(Math.log(dist/8+logAdd), maxSpeed);
             if (pos.getX(DistanceUnit.INCH) < bucketX - tolerance){
                 axial = speed;
                 lateral = 0;
@@ -314,14 +330,26 @@ public class SampleAuto extends LinearOpMode {
 
         heading = pos.getHeading(AngleUnit.DEGREES);
         while (heading > placeHeading + tolerance || heading < placeHeading - tolerance){
+            pos = odo.getPosition();
+            odo.update();
+            heading = pos.getHeading(AngleUnit.DEGREES);
+            telemetry.addData("heading", heading);
+            telemetry.update();
             if (heading > placeHeading + tolerance){
                 yaw = bigYawSpeed;
                 rotate();
-            } else if (heading < placeHeading - tolerance){
+            }
+            else if (heading < placeHeading - tolerance){
                 yaw = -bigYawSpeed;
                 rotate();
             }
         }
+        leftFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+
+
         //  raise scissor lift
         while (lift_left.getCurrentPosition() < lift_top && opModeIsActive()) {
             lift_left.setPower(.8);
@@ -331,51 +359,60 @@ public class SampleAuto extends LinearOpMode {
         lift_right.setPower(lift_left.getPower());
 
         //    align with bucket front and back
-        while (pos.getX(DistanceUnit.INCH) > (bucketX-2)) {
-            // Update the position
-            pos = odo.getPosition();
-            odo.update();
-
-            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX-2));
-            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
-
-            axial = -speed;
-            lateral = 0;
-            move();
-        }
+//        while (pos.getX(DistanceUnit.INCH) > (bucketX-2)) {
+//            // Update the position
+//            pos = odo.getPosition();
+//            odo.update();
+//
+//            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX-2));
+//            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+//
+//            axial = -speed;
+//            lateral = 0;
+//            move();
+//        }
 
         sleep(100);
+        top_arm.setPosition(OUTTAKE_ARM_BUCKET);
+        sleep(1000);
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
         sleep(100);
         top_arm.setPosition(OUTTAKE_ARM_FRONT);
+        sleep(2000);
 
         //    move away from bucket
-        while (pos.getX(DistanceUnit.INCH) < bucketX) {
-            // Update the position
-            pos = odo.getPosition();
-            odo.update();
+//        while (pos.getX(DistanceUnit.INCH) < bucketX) {
+//            // Update the position
+//            pos = odo.getPosition();
+//            odo.update();
+//
+//            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - bucketX);
+//            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+//
+//            axial = speed;
+//            lateral = 0;
+//            move();
+//        }
 
-            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - bucketX);
-            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
-
-            axial = speed;
-            lateral = 0;
-            move();
-        }
-
-        top_arm.setPosition(OUTTAKE_ARM_BACK);
         while (lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
             lift_left.setPower(-.7);
             lift_right.setPower(lift_left.getPower());
         }
         lift_left.setPower(0);
         lift_right.setPower(lift_left.getPower());
+        top_arm.setPosition(OUTTAKE_ARM_BACK);
 
+        odo.update();
+        pos = odo.getPosition();
         heading = pos.getHeading(AngleUnit.DEGREES);
-        while (heading > 0){
-            yaw = bigYawSpeed;
-            rotate();
-        }
+        clawMidPos();
+//        while (heading < 0){
+//            pos = odo.getPosition();
+//            odo.update();
+//            heading = pos.getHeading(AngleUnit.DEGREES);
+//            yaw = -bigYawSpeed;
+//            rotate();
+//        }
         off();
     }
 
@@ -538,7 +575,7 @@ public class SampleAuto extends LinearOpMode {
         the tracking point the Y (strafe) odometry pod is. forward of center is a positive number,
         backwards is a negative number.
          */
-        odo.setOffsets(-80.0, 162.5); //these are tuned for 3110-0002-0001 Product Insight #1
+        odo.setOffsets(-65.0, -145.5); //these are tuned for 3110-0002-0001 Product Insight #1
 
         /*
         Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
@@ -555,7 +592,7 @@ public class SampleAuto extends LinearOpMode {
         increase when you move the robot forward. And the Y (strafe) pod should increase when
         you move the robot to the left.
          */
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
 
         /*
@@ -587,12 +624,12 @@ public class SampleAuto extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            telemetry.addData("Status", "Initialized");
-            telemetry.addData("X offset", odo.getXOffset());
-            telemetry.addData("Y offset", odo.getYOffset());
-            telemetry.addData("Device Version Number:", odo.getDeviceVersion());
-            telemetry.addData("Device Scalar", odo.getYawScalar());
-            telemetry.update();
+//            telemetry.addData("Status", "Initialized");
+//            telemetry.addData("X offset", odo.getXOffset());
+//            telemetry.addData("Y offset", odo.getYOffset());
+//            telemetry.addData("Device Version Number:", odo.getDeviceVersion());
+//            telemetry.addData("Device Scalar", odo.getYawScalar());
+//            telemetry.update();
 
             // Wait for the game to start (driver presses START)
             waitForStart();
@@ -600,11 +637,11 @@ public class SampleAuto extends LinearOpMode {
 
             // Run until the end of the match (driver presses STOP)
 
-            if (moveStuff) {
-                top_arm.setPosition(0.8);
-                outtake_claw.setPosition(.45);
-                moveStuff = false;
-            }
+//            if (moveStuff) {
+//                top_arm.setPosition(0.8);
+//                outtake_claw.setPosition(.45);
+//                moveStuff = false;
+//            }
 
 
             // Request an update from the Pinpoint odometry computer
@@ -617,19 +654,14 @@ public class SampleAuto extends LinearOpMode {
 
             // Get the current Position (x & y in mm, and heading in degrees) of the robot
             Pose2D pos = odo.getPosition();
-            String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-            telemetry.addData("Position", data);
-
-            // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
-            Pose2D vel = odo.getVelocity();
-            String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-            telemetry.addData("Velocity", velocity);
-
-            // Set servo positions
-            slide_left.setPosition(0.8);
-            slide_right.setPosition(0.3);
 
             if(!done) {
+                // Set servo positions
+                slide_left.setPosition(LEFT_SLIDES_OUT);
+                slide_right.setPosition(RIGHT_SLIDES_IN);
+                outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
+                top_arm.setPosition(OUTTAKE_ARM_FRONT);
+                clawMidPos();
                 // place preloaded specimen
                 place();
                 blockNum += 1;
@@ -637,12 +669,12 @@ public class SampleAuto extends LinearOpMode {
                 grab();
                 place();
                 blockNum += 1;
-                pickupY = 10;
+                pickupY += 5;
 
                 grab();
                 place();
                 blockNum += 1;
-                pickupY = 15;
+                pickupY += 5;
 
                 grab();
                 place();
@@ -651,15 +683,15 @@ public class SampleAuto extends LinearOpMode {
             }
 
 
-            // Update telemetry
-            telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
-            telemetry.addData("position: ", pos.getX(DistanceUnit.INCH));
-            telemetry.addData("Lift Left Power", lift_left.getPower());
-            telemetry.addData("Lift Right Power", lift_right.getPower());
-            telemetry.addData("Lift Left Position", lift_left.getCurrentPosition());
-            telemetry.addData("Lift Right Position", lift_right.getCurrentPosition());
-            telemetry.update();
-            resetRuntime();
+//            // Update telemetry
+//            telemetry.addData("heading: ", pos.getHeading(AngleUnit.DEGREES));
+//            telemetry.addData("position: ", pos.getX(DistanceUnit.INCH));
+//            telemetry.addData("Lift Left Power", lift_left.getPower());
+//            telemetry.addData("Lift Right Power", lift_right.getPower());
+//            telemetry.addData("Lift Left Position", lift_left.getCurrentPosition());
+//            telemetry.addData("Lift Right Position", lift_right.getCurrentPosition());
+//            telemetry.update();
+//            resetRuntime();
         }
 
 
