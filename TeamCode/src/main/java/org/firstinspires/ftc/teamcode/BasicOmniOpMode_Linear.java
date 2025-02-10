@@ -31,8 +31,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     final double pos_rate = -0.004;
     private double bld = 0.38;
     private double brd = 0.77;
-    private double blm = bld + 0.9;
-    private double brm = brd - 0.9;
+    private double blm = bld + 0.13;
+    private double brm = brd - 0.13;
 
 
 
@@ -445,47 +445,25 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 up_down_hinge.setPosition(WRIST_MIDDLE);
                 sleep(400);
 
-                status = limelight.getStatus();
-                telemetry.addData("Name", "%s",
-                        status.getName());
-                telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
-                        status.getTemp(), status.getCpu(), (int) status.getFps());
-                telemetry.addData("Pipeline", "Index: %d, Type: %s",
-                        status.getPipelineIndex(), status.getPipelineType());
-                telemetry.update();
-
                 result = limelight.getLatestResult();
                 if (result != null) {
-                    // Access general information
-                    Pose3D botpose = result.getBotpose();
-                    double captureLatency = result.getCaptureLatency();
-                    double targetingLatency = result.getTargetingLatency();
-                    double parseLatency = result.getParseLatency();
-                    telemetry.addData("LL Latency", captureLatency + targetingLatency);
-                    telemetry.addData("Parse Latency", parseLatency);
-
                     if (result.isValid()) {
                         telemetry.addData("tx", result.getTx());
-                        telemetry.addData("txnc", result.getTxNC());
                         telemetry.addData("ty", result.getTy());
-                        telemetry.addData("tync", result.getTyNC());
 
                         double arm_pos = mid_pos;
                         arm_pos += result.getTx() * pos_rate;
-                        double arm_pos_new = mid_pos;
                         if (arm_pos < min_pos) {
-                            arm_pos_new = min_pos;
+                            arm_pos = min_pos;
                         } else if (arm_pos > max_pos) {
-                            arm_pos_new = max_pos;
+                            arm_pos = max_pos;
                         }
 
-                        if (arm_pos_new > 0 && arm_pos_new < 1){
-                            leftRightHinge.setPosition(arm_pos_new);
-                            telemetry.addData("arm pos position good", arm_pos_new);
-                            telemetry.update();
+                        if (arm_pos > 0 && arm_pos < 1){
+                            leftRightHinge.setPosition(arm_pos);
+                            telemetry.addData("arm pos position good", arm_pos);
                         } else {
-                            telemetry.addData("arm pos position wrong", arm_pos_new);
-                            telemetry.update();
+                            telemetry.addData("arm pos position wrong", arm_pos);
                         }
 
                         // arm down
@@ -493,12 +471,11 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         bar_left.setPosition(0.38);
                         bar_right.setPosition(0.77);
 
-                        double arm_length = 18;
+                        double arm_length = 10;
                         double clawDist = Math.sqrt(arm_length*arm_length - (result.getTx()*result.getTx()));
                         double distY = result.getTy() - clawDist;
 
                         telemetry.addData("dist y", distY);
-                        telemetry.update();
 
                         double slide_posL = slide_left.getPosition();
                         double slide_posR = slide_right.getPosition();
@@ -507,7 +484,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         double next_posR = slide_posR + distY*0.02;
 
                         telemetry.addData("intended slide position", next_posR);
-                        telemetry.update();
 
                         double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
                         double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
@@ -515,22 +491,15 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1){
                             telemetry.addData("slide position", new_posL);
                             telemetry.addData("slide position", new_posR);
-                            telemetry.update();
                             slide_left.setPosition(new_posL);
                             slide_right.setPosition(new_posR);
                         } else {
                             telemetry.addData("slide position wrong", new_posL);
                             telemetry.addData("slide position wrong", new_posR);
-                            telemetry.update();
                         }
 
                         claw.setPosition(CLAW_OPEN);
-
-                        // Access color results
-                        List<LLResultTypes.ColorResult> colorResults = result.getColorResults();
-                        for (LLResultTypes.ColorResult cr : colorResults) {
-                            telemetry.addData("Color", "X: %.2f, Y: %.2f", cr.getTargetXDegrees(), cr.getTargetYDegrees());
-                        }
+                        telemetry.update();
                     }
                 }
             }

@@ -88,7 +88,7 @@ public class PinpointAuto extends LinearOpMode {
 
     private double pickupX = 0.5; // way to high right now to not break the claw
     private int pickupY = -49;
-    private double placeX = 30.5;
+    private double placeX = 29.5;
     private int placeY = 20;
     private int placementOffset = -3;
     public boolean useLiftEncoder = false;
@@ -461,7 +461,7 @@ public class PinpointAuto extends LinearOpMode {
         // correct
         pos = odo.getPosition();
         odo.update();
-        while ((pos.getY(DistanceUnit.INCH) < -35 && opModeIsActive())){
+        while ((pos.getY(DistanceUnit.INCH) < -36 && opModeIsActive())){
             pos = odo.getPosition();
             odo.update();
 
@@ -481,14 +481,14 @@ public class PinpointAuto extends LinearOpMode {
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             targetX = sampX;
-            targetY = -35;
+            targetY = -36;
 
             telemetry.addData("y", pos.getY(DistanceUnit.INCH));
             telemetry.addData("x", pos.getX(DistanceUnit.INCH));
             telemetry.update();
 
             axial = speed;
-            lateral = -0.05;
+            lateral = -0.08;
 
 //            if (pos.getY(DistanceUnit.INCH) > targetY){
 //                lateral = 0.02;
@@ -611,11 +611,11 @@ public class PinpointAuto extends LinearOpMode {
             axial = speed;
             lateral = -0.15;
 
-            if (pos.getX(DistanceUnit.INCH) > targetY){
-                lateral = 0.02;
-            } else if (pos.getX(DistanceUnit.INCH) < targetY - 0.1){
-                lateral = -0.02;
-            }
+//            if (pos.getX(DistanceUnit.INCH) > targetY){
+//                lateral = 0.02;
+//            } else if (pos.getX(DistanceUnit.INCH) < targetY - 0.1){
+//                lateral = -0.02;
+//            }
 
             move();
         }

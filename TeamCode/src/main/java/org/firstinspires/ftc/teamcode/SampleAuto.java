@@ -23,6 +23,8 @@ package org.firstinspires.ftc.teamcode;
  */
 
 
+import static org.firstinspires.ftc.teamcode.Constants.*;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -43,22 +45,32 @@ public class SampleAuto extends LinearOpMode {
 
     double oldTime = 0;
 
-    private double currentPosition = 0.8;
-    private double currentPosition1 = 0.3; // Start the servo at the middle position
-    private int blockNum = 1;
-    private int numSamp = 1;
+    private int blockNum = 0;
     private double tolerance = 0.1;
-    private int bucketX = 10;
-    private int bucketY = 60;
-    private int pickupX = 20; // way to high right now to not break the claw
-    private int pickupY = 44;
-    private int pickupOffset = 10;
-    private static final double CHANGE_AMOUNT = 0.005;
-    public boolean useLiftEncoder = false;
+    private int bucketX = 12;
+    private int bucketY = 20;
+    private int pickupX = 15;
+    private int pickupY = 5;
     private int lift_top = 750;
     private int lift_bottom = 0;
+    private double placeHeading = -20;
     boolean moveStuff = true;
     boolean liftPosition = true;
+    private double heading = 0.0;
+    private int distOff = 2;
+    private double maxSpeed = 0.75;
+    private double speed = maxSpeed;
+    private double maxSpeed2 = 0.95;
+    private double speed2 = maxSpeed2; // max value is 0.89
+    private double correctionSpeed = 0.1;
+    private double headingCorrectSpeed = 0.165;
+    private double yawSpeed = 0.08;
+    private double bigYawSpeed = 0.4;
+    private double targetX = 0;
+    private double logAdd = 1.01;
+    private double axial = 0.0;
+    private double lateral = 0.0;
+    private double yaw = 0.0;
     boolean done = false;
 
 
@@ -81,44 +93,115 @@ public class SampleAuto extends LinearOpMode {
     private DcMotor lift_left = null;
     private DcMotor lift_right = null;
 
-    // Add variables for slow mode
-    private boolean slowMode = false;
-    private final double SLOW_MODE_FACTOR = 0.25; // Adjust this value to change the slow mode speed
-
     //    this function goes straight from the wall to place the specimen
     public void off(){
         leftFrontDrive.setPower(0);
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
         rightFrontDrive.setPower(0);
+        headingCorrect();
     }
 
-    public void forward(){
-        leftFrontDrive.setPower(.4);
-        leftBackDrive.setPower(.4);
-        rightBackDrive.setPower(.4);
-        rightFrontDrive.setPower(.4);
+    public void headingCorrect(){
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        odo.update();
+
+        heading = pos.getHeading(AngleUnit.DEGREES);
+        telemetry.addData("heading", heading);
+        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+        telemetry.update();
+
+        while (heading < -0.05 || heading > 0.05){
+            pos = odo.getPosition();
+            odo.update();
+            heading = pos.getHeading(AngleUnit.DEGREES);
+
+            telemetry.addData("heading", heading);
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.update();
+
+//            if it's rotating too much than reverse heading greater than less than
+            if (heading > 0.05){
+                leftFrontDrive.setPower(headingCorrectSpeed);
+                leftBackDrive.setPower(headingCorrectSpeed);
+                rightBackDrive.setPower(-headingCorrectSpeed);
+                rightFrontDrive.setPower(-headingCorrectSpeed);
+            }
+            if (heading < -0.05){
+                leftFrontDrive.setPower(-headingCorrectSpeed);
+                leftBackDrive.setPower(-headingCorrectSpeed);
+                rightBackDrive.setPower(headingCorrectSpeed);
+                rightFrontDrive.setPower(headingCorrectSpeed);
+            }
+
+        }
+
+        leftFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+        sleep(10);
     }
 
-    public void reverse(){
-        leftFrontDrive.setPower(-.4);
-        leftBackDrive.setPower(-.4);
-        rightBackDrive.setPower(-.4);
-        rightFrontDrive.setPower(-.4);
+    public void move(){
+        Pose2D pos = odo.getPosition();
+        odo.update();
+        heading = pos.getHeading(AngleUnit.DEGREES);
+        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+        telemetry.addData("heading", heading);
+        telemetry.update();
+
+        yaw = 0;
+        if (heading > 0.1){
+            yaw = yawSpeed;
+        }
+        if (heading < -0.1){
+            yaw = -yawSpeed;
+        }
+
+        double leftFrontPower = axial + lateral + yaw;
+        double rightFrontPower = axial - lateral - yaw;
+        double leftBackPower = axial - lateral + yaw;
+        double rightBackPower = axial + lateral - yaw;
+
+        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+        max = Math.max(max, Math.abs(leftBackPower));
+        max = Math.max(max, Math.abs(rightBackPower));
+
+        if (max > speed2+0.1) {
+            leftFrontPower /= max;
+            rightFrontPower /= max;
+            leftBackPower /= max;
+            rightBackPower /= max;
+        }
+
+        leftFrontDrive.setPower(leftFrontPower);
+        rightFrontDrive.setPower(rightFrontPower);
+        leftBackDrive.setPower(leftBackPower);
+        rightBackDrive.setPower(rightBackPower);
     }
 
-    public void strafeRight(){
-        leftFrontDrive.setPower(0.4);
-        leftBackDrive.setPower(-0.4);
-        rightBackDrive.setPower(0.4);
-        rightFrontDrive.setPower(-0.4);
-    }
+    public void rotate(){
+        double leftFrontPower = yaw;
+        double rightFrontPower = -yaw;
+        double leftBackPower = yaw;
+        double rightBackPower = -yaw;
 
-    public void strafeLeft(){
-        leftFrontDrive.setPower(-0.4);
-        leftBackDrive.setPower(0.4);
-        rightBackDrive.setPower(-0.4);
-        rightFrontDrive.setPower(0.4);
+        leftFrontDrive.setPower(leftFrontPower);
+        rightFrontDrive.setPower(rightFrontPower);
+        leftBackDrive.setPower(leftBackPower);
+        rightBackDrive.setPower(rightBackPower);
     }
 
 
@@ -135,28 +218,30 @@ public class SampleAuto extends LinearOpMode {
         claw.setPosition(0.91);
         sleep(100);
         // open outtake claw and move to correct position
-        outtake_claw.setPosition(.2);
-
-        // move intake claw to correct position
+        outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
+        top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
+        sleep(400);
+        top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
+        claw.setPosition(CLAW_CLOSED-0.037);
         bar_left.setPosition(0.65);
         bar_right.setPosition(0.51);
-        left_right_hinge.setPosition(0.72);
+        left_right_hinge.setPosition(HINGE_MIDDLE);
         up_down_hinge.setPosition(0.0);
+        sleep(200);
 
-        // position top arm
-        top_arm.setPosition(0.7);
+        double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
+        double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
+        double rightPos = RIGHT_SLIDES_IN + inAmount;
+        slide_left.setPosition(leftPos);
+        slide_right.setPosition(rightPos);
 
-        // make sure slides are in
-        slide_left.setPosition(0.61);
-        slide_right.setPosition(0.49);
-
-        // hand off
-        sleep(1500);
-        outtake_claw.setPosition(.45);
-        sleep(500);
-        claw.setPosition(0.55);
-        top_arm.setPosition(0.1);
-        top_arm.setPosition(0.3);
+        new Thread(() -> {
+            sleep(1300);
+            outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
+            sleep(500);
+            claw.setPosition(CLAW_OPEN);
+            top_arm.setPosition(OUTTAKE_ARM_BACK);
+        }).start();
     }
 
     // place the sample
@@ -165,66 +250,131 @@ public class SampleAuto extends LinearOpMode {
 
         double newTime = getRuntime();
         double loopTime = newTime - oldTime;
-        double frequency = 1 / loopTime;
         oldTime = newTime;
 
         // Get the current Position (x & y in mm, and heading in degrees) of the robot
         Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-
-        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
-        Pose2D vel = odo.getVelocity();
-        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Velocity", velocity);
+        odo.update();
 
         //    align with bucket front and back
         while (pos.getX(DistanceUnit.INCH) < bucketX - tolerance || pos.getX(DistanceUnit.INCH) > bucketX + tolerance && opModeIsActive()) {
+            // Update the position
+            pos = odo.getPosition();
+            odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX));
+            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
             if (pos.getX(DistanceUnit.INCH) < bucketX - tolerance){
-                forward();
+                axial = speed;
+                lateral = 0;
+                move();
             }
             if (pos.getX(DistanceUnit.INCH) > bucketX + tolerance){
-                reverse();
+                axial = -speed;
+                lateral = 0;
+                move();
             }
-            // Update the position
-            pos = odo.getPosition();
-            odo.update();
         }
         off();
 
+        pos = odo.getPosition();
+        odo.update();
         //    align with bucket left and right
-        while (pos.getY(DistanceUnit.INCH) < bucketY - tolerance && pos.getY(DistanceUnit.INCH) > bucketY + tolerance && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) < bucketY - tolerance || pos.getY(DistanceUnit.INCH) > bucketY + tolerance && opModeIsActive()) {
+            // Update the position
+            pos = odo.getPosition();
+            odo.update();
+
+            targetX = bucketX;
+            axial = 0;
+            if (pos.getX(DistanceUnit.INCH) < targetX - tolerance){
+                axial = correctionSpeed;
+            } else if (pos.getX(DistanceUnit.INCH) > targetX + tolerance){
+                axial = -correctionSpeed;
+            }
+
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) - (bucketY));
+            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+
             if (pos.getY(DistanceUnit.INCH) < bucketY - tolerance){
-                strafeLeft();
+                lateral = -speed2;
+                move();
             }
             if (pos.getY(DistanceUnit.INCH) > bucketY + tolerance){
-                strafeRight();
+                lateral = speed2;
+                move();
             }
             // Update the position
             pos = odo.getPosition();
             odo.update();
         }
-        off();
 
+        pos = odo.getPosition();
+        odo.update();
+
+        heading = pos.getHeading(AngleUnit.DEGREES);
+        while (heading > placeHeading + tolerance || heading < placeHeading - tolerance){
+            if (heading > placeHeading + tolerance){
+                yaw = bigYawSpeed;
+                rotate();
+            } else if (heading < placeHeading - tolerance){
+                yaw = -bigYawSpeed;
+                rotate();
+            }
+        }
         //  raise scissor lift
-        while (lift_left.getCurrentPosition() + 15 < lift_top && opModeIsActive()) {
+        while (lift_left.getCurrentPosition() < lift_top && opModeIsActive()) {
             lift_left.setPower(.8);
             lift_right.setPower(lift_left.getPower());
         }
         lift_left.setPower(0);
         lift_right.setPower(lift_left.getPower());
 
-        sleep(100);
-        outtake_claw.setPosition(0.2);
-        sleep(100);
-        top_arm.setPosition(0.8);
-
-        //  back away from bucket
-        while (pos.getX(DistanceUnit.INCH) < bucketX + 5 && opModeIsActive()) {
-            forward();
+        //    align with bucket front and back
+        while (pos.getX(DistanceUnit.INCH) > (bucketX-2)) {
             // Update the position
             pos = odo.getPosition();
             odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX-2));
+            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+
+            axial = -speed;
+            lateral = 0;
+            move();
+        }
+
+        sleep(100);
+        outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
+        sleep(100);
+        top_arm.setPosition(OUTTAKE_ARM_FRONT);
+
+        //    move away from bucket
+        while (pos.getX(DistanceUnit.INCH) < bucketX) {
+            // Update the position
+            pos = odo.getPosition();
+            odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - bucketX);
+            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+
+            axial = speed;
+            lateral = 0;
+            move();
+        }
+
+        top_arm.setPosition(OUTTAKE_ARM_BACK);
+        while (lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
+            lift_left.setPower(-.7);
+            lift_right.setPower(lift_left.getPower());
+        }
+        lift_left.setPower(0);
+        lift_right.setPower(lift_left.getPower());
+
+        heading = pos.getHeading(AngleUnit.DEGREES);
+        while (heading > 0){
+            yaw = bigYawSpeed;
+            rotate();
         }
         off();
     }
@@ -240,46 +390,97 @@ public class SampleAuto extends LinearOpMode {
 
         // Get the current Position (x & y in mm, and heading in degrees) of the robot
         Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
+        odo.update();
 
-        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
-        Pose2D vel = odo.getVelocity();
-        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Velocity", velocity);
+        while (pos.getY(DistanceUnit.INCH) < pickupY - tolerance || pos.getY(DistanceUnit.INCH) > pickupY + tolerance && opModeIsActive()) {
+            // Update the position
+            pos = odo.getPosition();
+            odo.update();
 
-        while (pos.getX(DistanceUnit.INCH) < pickupX || lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
-            if (pos.getX(DistanceUnit.INCH) < bucketX + 5){
-                forward();
-            } else {
-                off();
+            targetX = pickupX;
+            axial = 0;
+            if (pos.getX(DistanceUnit.INCH) < targetX - tolerance){
+                axial = correctionSpeed;
+            } else if (pos.getX(DistanceUnit.INCH) > targetX + tolerance){
+                axial = -correctionSpeed;
             }
 
-            if (lift_left.getCurrentPosition() > lift_bottom){
-                lift_left.setPower(-.7);
-                lift_right.setPower(lift_left.getPower());
-            } else {
-                lift_left.setPower(0);
-                lift_right.setPower(lift_left.getPower());
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) - (pickupY));
+            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+
+            if (pos.getY(DistanceUnit.INCH) < pickupY - tolerance){
+                lateral = -speed2;
+                move();
+            }
+            if (pos.getY(DistanceUnit.INCH) > pickupY + tolerance){
+                lateral = speed2;
+                move();
             }
             // Update the position
             pos = odo.getPosition();
             odo.update();
         }
-        off();
 
-        while (pos.getY(DistanceUnit.INCH) < pickupY + pickupOffset*blockNum- tolerance || pos.getX(DistanceUnit.INCH) > pickupY + pickupOffset*blockNum + tolerance && opModeIsActive()){
-            if (pos.getY(DistanceUnit.INCH) < pickupY - tolerance){
-                strafeLeft();
-            }
-            if (pos.getY(DistanceUnit.INCH) > pickupY + tolerance){
-                strafeRight();
-            }
-        }
+        slide_left.setPosition(LEFT_SLIDES_IN);
+        slide_right.setPosition(RIGHT_SLIDES_OUT);
+
         off();
 
         passThru();
 
+//        heading = pos.getHeading(AngleUnit.DEGREES);
+//        while (heading > 0 + tolerance || heading < 0 - tolerance){
+//            if (heading > 0 + tolerance){
+//                yaw = yawSpeed;
+//                rotate();
+//            } else if (heading < 0 - tolerance){
+//                yaw = -yawSpeed;
+//                rotate();
+//            }
+//        }
+
+//        while (lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
+//            if (lift_left.getCurrentPosition() > lift_bottom){
+//                lift_left.setPower(-.7);
+//                lift_right.setPower(lift_left.getPower());
+//            } else {
+//                lift_left.setPower(0);
+//                lift_right.setPower(lift_left.getPower());
+//            }
+//            // Update the position
+//            pos = odo.getPosition();
+//            odo.update();
+//        }
+//        off();
+
+//        while (pos.getX(DistanceUnit.INCH) < pickupX || lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
+//            if (pos.getX(DistanceUnit.INCH) < bucketX + 5){
+//                forward();
+//            } else {
+//                off();
+//            }
+//
+//            if (lift_left.getCurrentPosition() > lift_bottom){
+//                lift_left.setPower(-.7);
+//                lift_right.setPower(lift_left.getPower());
+//            } else {
+//                lift_left.setPower(0);
+//                lift_right.setPower(lift_left.getPower());
+//            }
+//            // Update the position
+//            pos = odo.getPosition();
+//            odo.update();
+//        }
+//        off();
+
+//        while (pos.getY(DistanceUnit.INCH) < pickupY + pickupOffset*blockNum- tolerance || pos.getX(DistanceUnit.INCH) > pickupY + pickupOffset*blockNum + tolerance && opModeIsActive()){
+//            if (pos.getY(DistanceUnit.INCH) < pickupY - tolerance){
+//                strafeLeft();
+//            }
+//            if (pos.getY(DistanceUnit.INCH) > pickupY + tolerance){
+//                strafeRight();
+//            }
+//        }
     }
 
 
@@ -431,15 +632,21 @@ public class SampleAuto extends LinearOpMode {
             if(!done) {
                 // place preloaded specimen
                 place();
+                blockNum += 1;
+
                 grab();
                 place();
-                numSamp += 1;
+                blockNum += 1;
+                pickupY = 10;
+
                 grab();
                 place();
-                numSamp += 1;
+                blockNum += 1;
+                pickupY = 15;
+
                 grab();
                 place();
-                numSamp += 1;
+                blockNum += 1;
                 done = true;
             }
 
