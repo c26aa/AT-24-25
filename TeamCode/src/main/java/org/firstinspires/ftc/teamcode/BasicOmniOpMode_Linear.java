@@ -31,8 +31,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     final double pos_rate = -0.004;
     private double bld = 0.38;
     private double brd = 0.77;
-    private double blm = bld + 0.1;
-    private double brm = brd - 0.1;
+    private double blm = bld + 0.13;
+    private double brm = brd - 0.13;
 
 
 
@@ -468,8 +468,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
                         // arm down
                         sleep(200);
-                        bar_left.setPosition(0.38);
-                        bar_right.setPosition(0.77);
+//                        bar_left.setPosition(0.38);
+//                        bar_right.setPosition(0.77);
+                        bar_left.setPosition(0.42);
+                        bar_right.setPosition(0.73);
 
                         double arm_length = 10;
                         double clawDist = Math.sqrt(Math.abs(arm_length*arm_length - (result.getTx()*result.getTx())));
@@ -480,8 +482,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         double slide_posL = slide_left.getPosition();
                         double slide_posR = slide_right.getPosition();
 
-                        double next_posL = slide_posL - distY*0.03;
-                        double next_posR = slide_posR + distY*0.03;
+                        double next_posL = slide_posL - distY*0.02;
+                        double next_posR = slide_posR + distY*0.02;
 
                         telemetry.addData("intended slide position", next_posR);
 

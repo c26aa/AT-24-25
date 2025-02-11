@@ -47,11 +47,11 @@ public class SampleAuto extends LinearOpMode {
 
     private int blockNum = 0;
     private double tolerance = 0.1;
-    private double bucketX = 7;
+    private double bucketX = 6.6;
     private int bucketY = 26;
-    private double pickupX = bucketX;
-    private int pickupY = 15;
-    private int lift_top = 1220;
+    private double pickupX = bucketX+1;
+    private int pickupY = 18;
+    private int lift_top = 1240;
     private int lift_bottom = 0;
     private double placeHeading = -40;
     boolean moveStuff = true;
@@ -62,6 +62,7 @@ public class SampleAuto extends LinearOpMode {
     private double speed = maxSpeed;
     private double maxSpeed2 = 0.95;
     private double speed2 = maxSpeed2; // max value is 0.89
+    private double slowSpeed = 0.3;
     private double correctionSpeed = 0.1;
     private double headingCorrectSpeed = 0.3;
     private double yawSpeed = 0.08;
@@ -232,8 +233,6 @@ public class SampleAuto extends LinearOpMode {
         sleep(300);
         // open outtake claw and move to correct position
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
-        top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
-        sleep(400);
         top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
         claw.setPosition(CLAW_CLOSED-0.037);
         bar_left.setPosition(0.65);
@@ -256,7 +255,7 @@ public class SampleAuto extends LinearOpMode {
 //            top_arm.setPosition(OUTTAKE_ARM_BACK);
         }).start();
 
-        sleep(200);
+        sleep(2000);
         clawMidPos();
     }
 
@@ -320,7 +319,7 @@ public class SampleAuto extends LinearOpMode {
                 lateral = speed2;
                 move();
             }
-            // Update the position
+            // Update t    he position
             pos = odo.getPosition();
             odo.update();
         }
@@ -358,19 +357,14 @@ public class SampleAuto extends LinearOpMode {
         lift_left.setPower(0);
         lift_right.setPower(lift_left.getPower());
 
-        //    align with bucket front and back
-//        while (pos.getX(DistanceUnit.INCH) > (bucketX-2)) {
-//            // Update the position
-//            pos = odo.getPosition();
-//            odo.update();
-//
-//            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX-2));
-//            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
-//
-//            axial = -speed;
-//            lateral = 0;
-//            move();
-//        }
+        axial = -slowSpeed;
+        lateral = 0;
+        move();
+        sleep(10);
+        leftFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        rightFrontDrive.setPower(0);
 
         sleep(100);
         top_arm.setPosition(OUTTAKE_ARM_BUCKET);
@@ -380,19 +374,14 @@ public class SampleAuto extends LinearOpMode {
         top_arm.setPosition(OUTTAKE_ARM_FRONT);
         sleep(2000);
 
-        //    move away from bucket
-//        while (pos.getX(DistanceUnit.INCH) < bucketX) {
-//            // Update the position
-//            pos = odo.getPosition();
-//            odo.update();
-//
-//            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - bucketX);
-//            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
-//
-//            axial = speed;
-//            lateral = 0;
-//            move();
-//        }
+        axial = slowSpeed;
+        lateral = 0;
+        move();
+        sleep(15);
+        leftFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        rightFrontDrive.setPower(0);
 
         while (lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
             lift_left.setPower(-.7);
@@ -406,13 +395,7 @@ public class SampleAuto extends LinearOpMode {
         pos = odo.getPosition();
         heading = pos.getHeading(AngleUnit.DEGREES);
         clawMidPos();
-//        while (heading < 0){
-//            pos = odo.getPosition();
-//            odo.update();
-//            heading = pos.getHeading(AngleUnit.DEGREES);
-//            yaw = -bigYawSpeed;
-//            rotate();
-//        }
+
         off();
     }
 
@@ -457,11 +440,11 @@ public class SampleAuto extends LinearOpMode {
             pos = odo.getPosition();
             odo.update();
         }
+        off();
 
         slide_left.setPosition(LEFT_SLIDES_IN);
         slide_right.setPosition(RIGHT_SLIDES_OUT);
 
-        off();
 
         passThru();
 
@@ -669,12 +652,12 @@ public class SampleAuto extends LinearOpMode {
                 grab();
                 place();
                 blockNum += 1;
-                pickupY += 5;
+                pickupY += 10;
 
                 grab();
                 place();
                 blockNum += 1;
-                pickupY += 5;
+                pickupY += 10;
 
                 grab();
                 place();
