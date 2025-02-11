@@ -252,11 +252,12 @@ public class SampleAuto extends LinearOpMode {
             outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
             sleep(500);
             claw.setPosition(CLAW_OPEN);
+            sleep(2000);
+            clawMidPos();
 //            top_arm.setPosition(OUTTAKE_ARM_BACK);
         }).start();
 
-        sleep(2000);
-        clawMidPos();
+
     }
 
     // place the sample

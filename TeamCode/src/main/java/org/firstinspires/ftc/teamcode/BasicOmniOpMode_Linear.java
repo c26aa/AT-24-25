@@ -428,7 +428,12 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
 
 
-
+//            steps to make this work perfectly
+//            1) make sure claw pickups sample when the sample is placed perfectly for the claw to pick it up, if it doesn't, change arm_length
+//            2) make sure claw picks up sample when the sample is in line with the claw, and the only thing that needs to happen is slides out, if it doesn't change what slide position is multiplied by
+//            3) make sure claw picks up sample when it only takes a rotation of the hinge, but no slide movement, if it doesn't change pos_rate
+//            4) make sure claw picks up when it takes both hinge and slides
+//            consider making the distance between camera and claw different from hinge to claw
 
             //limelight code
             telemetry.addLine("opmode is active!!");
@@ -473,9 +478,11 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         bar_left.setPosition(0.42);
                         bar_right.setPosition(0.73);
 
-                        double arm_length = 10;
-                        double clawDist = Math.sqrt(Math.abs(arm_length*arm_length - (result.getTx()*result.getTx())));
-                        double distY = result.getTy() - clawDist;
+                        double claw_dist = 10; // distance from claw to hinge
+                        double camera_dist = 5; // distance from camera to hinge
+                        double clawy = Math.sqrt(Math.abs(claw_dist*claw_dist - (result.getTx()*result.getTx()))); // distance from camera to hinge just on y-axis after being rotated
+                        double samp_dist = camera_dist + result.getTy(); // distance from sample to hinge on y-axis
+                        double distY = samp_dist - clawy; // distance from sample to rotated claw/
 
                         telemetry.addData("dist y", distY);
 
