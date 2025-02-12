@@ -28,11 +28,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     final double max_pos = HINGE_LEFT;
     final double mid_pos = HINGE_MIDDLE;
     final double min_pos = HINGE_RIGHT;
-    final double pos_rate = -0.004;
     private double bld = 0.38;
     private double brd = 0.77;
-    private double blm = bld + 0.13;
-    private double brm = brd - 0.13;
+    private double blm = bld + 0.17;
+    private double brm = brd - 0.17;
 
 
 
@@ -213,6 +212,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     // Move lift up using encoders
                 } else if (gamepad2.dpad_left) {
                     lift_target = 1400;
+                    top_arm.setPosition(OUTTAKE_ARM_BUCKET);
                     // Move lift down using encoders
                 }
                 //NOTE TO SELF: IMPLEMENT MORE ROBUST CORRECTION MECHANISM
@@ -406,9 +406,12 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 up_down_hinge.setPosition(WRIST_MIDDLE);
                 outtake_claw.setPosition(CLAW_OPEN);
                 useLiftEncoder = true;
-                lift_target = lift_left.getCurrentPosition() + 170;
-                sleep(1000);
-                top_arm.setPosition(0.8);
+                lift_target = 200;
+                new Thread(() -> {
+                    sleep(1000);
+                    top_arm.setPosition(0.8);
+                }).start();
+
 
 
             }
@@ -435,8 +438,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 //            4) make sure claw picks up when it takes both hinge and slides
 //            consider making the distance between camera and claw different from hinge to claw
 
+//            degrees to centimeters:
+//            left_right_hinge servo position to centimeters: 0.1/5.8
+//            slide servo position to centimeters:
             //limelight code
-            telemetry.addLine("opmode is active!!");
             if (gamepad2.right_stick_x > 0.2 || gamepad2.right_stick_x < -0.2){
                 if (gamepad2.right_stick_x > 0.2) {
                     limelight.pipelineSwitch(0);
@@ -456,8 +461,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         telemetry.addData("tx", result.getTx());
                         telemetry.addData("ty", result.getTy());
 
-                        double arm_pos = mid_pos;
-                        arm_pos += result.getTx() * pos_rate;
+                        double degreeToCM = 3.9/12; // CM per degree
+                        double hingeToCM = -0.1/8; // hinge servo position per CM
+                        double slideToCM = 0.1/6; // slide servo position per CM
+
+
+                        double cmx = result.getTx()*degreeToCM;
+
+                        double arm_pos = mid_pos + (cmx * hingeToCM);
                         if (arm_pos < min_pos) {
                             arm_pos = min_pos;
                         } else if (arm_pos > max_pos) {
@@ -466,6 +477,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
                         if (arm_pos > 0 && arm_pos < 1){
                             leftRightHinge.setPosition(arm_pos);
+                            telemetry.addData("cmx", cmx);
+                            telemetry.addData("intended arm pos", mid_pos + (cmx * hingeToCM));
                             telemetry.addData("arm pos position good", arm_pos);
                         } else {
                             telemetry.addData("arm pos position wrong", arm_pos);
@@ -478,10 +491,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         bar_left.setPosition(0.42);
                         bar_right.setPosition(0.73);
 
-                        double claw_dist = 10; // distance from claw to hinge
-                        double camera_dist = 5; // distance from camera to hinge
-                        double clawy = Math.sqrt(Math.abs(claw_dist*claw_dist - (result.getTx()*result.getTx()))); // distance from camera to hinge just on y-axis after being rotated
-                        double samp_dist = camera_dist + result.getTy(); // distance from sample to hinge on y-axis
+                        double claw_dist = 14.5; // distance from claw to hinge
+                        double camera_dist = 6.5; // distance from camera to hinge
+                        double clawy = Math.sqrt(Math.abs(claw_dist*claw_dist - (cmx*cmx))); // distance from claw to hinge just on y-axis after being rotated
+                        double samp_dist = camera_dist + result.getTy()*degreeToCM; // distance from sample to hinge on y-axis
                         double distY = samp_dist - clawy; // distance from sample to rotated claw/
 
                         telemetry.addData("dist y", distY);
@@ -489,14 +502,20 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         double slide_posL = slide_left.getPosition();
                         double slide_posR = slide_right.getPosition();
 
-                        double next_posL = slide_posL - distY*0.02;
-                        double next_posR = slide_posR + distY*0.02;
+                        double next_posL = slide_posL - distY*slideToCM;
+                        double next_posR = slide_posR + distY*slideToCM;
 
                         telemetry.addData("intended slide position", next_posR);
 
                         double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
                         double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
 
+
+//                        double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
+//                        double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
+//                        double rightPos = RIGHT_SLIDES_IN + inAmount;
+//                        slide_left.setPosition(leftPos);
+//                        slide_right.setPosition(rightPos);
                         if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1){
                             telemetry.addData("slide position", new_posL);
                             telemetry.addData("slide position", new_posR);
@@ -514,11 +533,11 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 }
             }
 
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Slow Mode", slowMode ? "Enabled" : "Disabled");
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-            telemetry.addData("encoder_value_left", lift_encoder_value);
+//            telemetry.addData("Status", "Run Time: " + runtime.toString());
+//            telemetry.addData("Slow Mode", slowMode ? "Enabled" : "Disabled");
+//            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
+//            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+//            telemetry.addData("encoder_value_left", lift_encoder_value);
             telemetry.update();
 
 //            if (gamepad2.right_bumper) { // active intake code

@@ -25,6 +25,7 @@ package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.Constants.*;
 
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -35,6 +36,17 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Servo;
+import static org.firstinspires.ftc.teamcode.Constants.*;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 import java.util.Locale;
 
@@ -47,11 +59,11 @@ public class SampleAuto extends LinearOpMode {
 
     private int blockNum = 0;
     private double tolerance = 0.1;
-    private double bucketX = 6.6;
+    private double bucketX = 6;
     private int bucketY = 26;
-    private double pickupX = bucketX+1;
-    private int pickupY = 18;
-    private int lift_top = 1240;
+    private double pickupX = bucketX+7;
+    private double pickupY = 17.2;
+    private int lift_top = 1320;
     private int lift_bottom = 0;
     private double placeHeading = -40;
     boolean moveStuff = true;
@@ -64,7 +76,7 @@ public class SampleAuto extends LinearOpMode {
     private double speed2 = maxSpeed2; // max value is 0.89
     private double slowSpeed = 0.3;
     private double correctionSpeed = 0.1;
-    private double headingCorrectSpeed = 0.3;
+    private double headingCorrectSpeed = 0.2;
     private double yawSpeed = 0.08;
     private double bigYawSpeed = 0.4;
     private double targetX = 0;
@@ -73,6 +85,18 @@ public class SampleAuto extends LinearOpMode {
     private double lateral = 0.0;
     private double yaw = 0.0;
     boolean done = false;
+
+    private Limelight3A limelight;
+    private Servo leftRightHinge = null;
+    private Servo barl = null;
+    private Servo barr = null;
+    final double max_pos = HINGE_LEFT;
+    final double mid_pos = HINGE_MIDDLE;
+    final double min_pos = HINGE_RIGHT;
+    private double bld = 0.38;
+    private double brd = 0.77;
+    private double blm = bld + 0.17;
+    private double brm = brd - 0.17;
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -104,10 +128,15 @@ public class SampleAuto extends LinearOpMode {
     }
 
     public void clawPickPos(){
+        claw.setPosition(CLAW_OPEN);
+        bar_left.setPosition(0.42);
+        bar_right.setPosition(0.73);
+        sleep(1000);
         bar_left.setPosition(0.383);
         bar_right.setPosition(0.767);
         left_right_hinge.setPosition(HINGE_MIDDLE);
         up_down_hinge.setPosition(WRIST_DOWN);
+
     }
 
     public void clawMidPos(){
@@ -174,9 +203,11 @@ public class SampleAuto extends LinearOpMode {
         Pose2D pos = odo.getPosition();
         odo.update();
         heading = pos.getHeading(AngleUnit.DEGREES);
-        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
-        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
-        telemetry.addData("heading", heading);
+//        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+//        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+//        telemetry.addData("heading", heading);
+//        telemetry.update();
+        telemetry.addData("speed", speed);
         telemetry.update();
 
         yaw = 0;
@@ -209,6 +240,94 @@ public class SampleAuto extends LinearOpMode {
         rightBackDrive.setPower(rightBackPower);
     }
 
+    public void limelight(){
+        LLStatus status = limelight.getStatus();
+        LLResult result = limelight.getLatestResult();
+
+        leftRightHinge.setPosition(mid_pos);
+        barl.setPosition(blm);
+        barr.setPosition(brm);
+        up_down_hinge.setPosition(WRIST_MIDDLE);
+        sleep(400);
+
+        result = limelight.getLatestResult();
+        if (result != null) {
+            if (result.isValid()) {
+                telemetry.addData("tx", result.getTx());
+                telemetry.addData("ty", result.getTy());
+
+                double degreeToCM = 3.9/12; // CM per degree
+                double hingeToCM = -0.1/8; // hinge servo position per CM
+                double slideToCM = 0.1/6; // slide servo position per CM
+
+
+                double cmx = result.getTx()*degreeToCM;
+
+                double arm_pos = mid_pos + (cmx * hingeToCM);
+                if (arm_pos < min_pos) {
+                    arm_pos = min_pos;
+                } else if (arm_pos > max_pos) {
+                    arm_pos = max_pos;
+                }
+
+                if (arm_pos > 0 && arm_pos < 1){
+                    leftRightHinge.setPosition(arm_pos);
+                    telemetry.addData("cmx", cmx);
+                    telemetry.addData("intended arm pos", mid_pos + (cmx * hingeToCM));
+                    telemetry.addData("arm pos position good", arm_pos);
+                } else {
+                    telemetry.addData("arm pos position wrong", arm_pos);
+                }
+
+                // arm down
+                sleep(200);
+//                        bar_left.setPosition(0.38);
+//                        bar_right.setPosition(0.77);
+                bar_left.setPosition(0.42);
+                bar_right.setPosition(0.73);
+
+                double claw_dist = 14.5; // distance from claw to hinge
+                double camera_dist = 6.5; // distance from camera to hinge
+                double clawy = Math.sqrt(Math.abs(claw_dist*claw_dist - (cmx*cmx))); // distance from claw to hinge just on y-axis after being rotated
+                double samp_dist = camera_dist + result.getTy()*degreeToCM; // distance from sample to hinge on y-axis
+                double distY = samp_dist - clawy; // distance from sample to rotated claw/
+
+                telemetry.addData("dist y", distY);
+
+                double slide_posL = slide_left.getPosition();
+                double slide_posR = slide_right.getPosition();
+
+                double next_posL = slide_posL - distY*slideToCM;
+                double next_posR = slide_posR + distY*slideToCM;
+
+                telemetry.addData("intended slide position", next_posR);
+
+                double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
+                double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
+
+
+//                        double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
+//                        double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
+//                        double rightPos = RIGHT_SLIDES_IN + inAmount;
+//                        slide_left.setPosition(leftPos);
+//                        slide_right.setPosition(rightPos);
+                if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1){
+                    telemetry.addData("slide position", new_posL);
+                    telemetry.addData("slide position", new_posR);
+                    slide_left.setPosition(new_posL);
+                    slide_right.setPosition(new_posR);
+                } else {
+                    telemetry.addData("slide position wrong", new_posL);
+                    telemetry.addData("slide position wrong", new_posR);
+                }
+
+                up_down_hinge.setPosition(WRIST_DOWN);
+                claw.setPosition(CLAW_OPEN);
+                telemetry.update();
+            }
+        }
+    }
+
     public void rotate(){
         double leftFrontPower = yaw;
         double rightFrontPower = -yaw;
@@ -224,13 +343,15 @@ public class SampleAuto extends LinearOpMode {
 
     // pick up sample and pass thru
     public void passThru(){
+        limelight();
+        sleep(1000);
         // position intake arm
         clawPickPos();
-        sleep(100);
+        sleep(1000);
 
         // close claw
         claw.setPosition(0.91);
-        sleep(300);
+        sleep(1000);
         // open outtake claw and move to correct position
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
         top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
@@ -280,6 +401,10 @@ public class SampleAuto extends LinearOpMode {
 
             double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX));
             speed = Math.min(Math.log(dist/8+logAdd), maxSpeed);
+            telemetry.addData("dist", dist);
+            telemetry.addData("intended speed", Math.log(dist/8+logAdd));
+            telemetry.addData("speed", speed);
+            telemetry.update();
             if (pos.getX(DistanceUnit.INCH) < bucketX - tolerance){
                 axial = speed;
                 lateral = 0;
@@ -310,7 +435,12 @@ public class SampleAuto extends LinearOpMode {
             }
 
             double dist = Math.abs(pos.getY(DistanceUnit.INCH) - (bucketY));
-            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+            if (dist < 5){
+                speed2 = 0.25;
+            } else {
+                speed2 = maxSpeed2;
+            }
+//            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
 
             if (pos.getY(DistanceUnit.INCH) < bucketY - tolerance){
                 lateral = -speed2;
@@ -320,7 +450,7 @@ public class SampleAuto extends LinearOpMode {
                 lateral = speed2;
                 move();
             }
-            // Update t    he position
+            // Update the position
             pos = odo.getPosition();
             odo.update();
         }
@@ -334,13 +464,17 @@ public class SampleAuto extends LinearOpMode {
             odo.update();
             heading = pos.getHeading(AngleUnit.DEGREES);
             telemetry.addData("heading", heading);
+            double newYawSpeed = bigYawSpeed;
+            if (Math.abs(heading-placeHeading) < 5){
+                yaw = correctionSpeed;
+            }
             telemetry.update();
             if (heading > placeHeading + tolerance){
-                yaw = bigYawSpeed;
+                yaw = newYawSpeed;
                 rotate();
             }
             else if (heading < placeHeading - tolerance){
-                yaw = -bigYawSpeed;
+                yaw = -newYawSpeed;
                 rotate();
             }
         }
@@ -361,7 +495,7 @@ public class SampleAuto extends LinearOpMode {
         axial = -slowSpeed;
         lateral = 0;
         move();
-        sleep(10);
+        sleep(250);
         leftFrontDrive.setPower(0);
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
@@ -373,12 +507,12 @@ public class SampleAuto extends LinearOpMode {
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
         sleep(100);
         top_arm.setPosition(OUTTAKE_ARM_FRONT);
-        sleep(2000);
+        sleep(1000);
 
         axial = slowSpeed;
         lateral = 0;
         move();
-        sleep(15);
+        sleep(250);
         leftFrontDrive.setPower(0);
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
@@ -524,6 +658,19 @@ public class SampleAuto extends LinearOpMode {
 //        claw = hardwareMap.get(CRServo.class, "clw");
         top_arm = hardwareMap.get(Servo.class, "tam");
         outtake_claw = hardwareMap.get(Servo.class, "ocw");
+        barl = hardwareMap.get(Servo.class, "brl");
+        barr = hardwareMap.get(Servo.class, "brr");
+
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        leftRightHinge = hardwareMap.get(Servo.class, "hlr");
+        telemetry.setMsTransmissionInterval(500);
+
+        limelight.pipelineSwitch(1);
+        limelight.start();
+
+        telemetry.addData(">", "Robot Ready.  Press Play.");
+        telemetry.update();
 
 
         lift_left.setDirection(DcMotor.Direction.REVERSE);
@@ -653,12 +800,13 @@ public class SampleAuto extends LinearOpMode {
                 grab();
                 place();
                 blockNum += 1;
-                pickupY += 10;
+                pickupY += 8.5;
+                pickupX += 2.5;
 
                 grab();
                 place();
                 blockNum += 1;
-                pickupY += 10;
+                pickupY += 7.5;
 
                 grab();
                 place();
