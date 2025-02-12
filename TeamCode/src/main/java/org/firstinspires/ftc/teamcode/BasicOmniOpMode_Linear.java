@@ -432,15 +432,16 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
 
 //            steps to make this work perfectly
-//            1) make sure claw pickups sample when the sample is placed perfectly for the claw to pick it up, if it doesn't, change arm_length
+//            1) make sure claw pickups sample when the sample is placed perfectly under the camera,
+//                  if it too far in, make denominator of slidesToCM greater, and if too far our make denominator lower
+//                  if it is perfect, then put a comment saying not to change slidesToCM
 //            2) make sure claw picks up sample when the sample is in line with the claw, and the only thing that needs to happen is slides out, if it doesn't change what slide position is multiplied by
 //            3) make sure claw picks up sample when it only takes a rotation of the hinge, but no slide movement, if it doesn't change pos_rate
 //            4) make sure claw picks up when it takes both hinge and slides
-//            consider making the distance between camera and claw different from hinge to claw
 
-//            degrees to centimeters:
-//            left_right_hinge servo position to centimeters: 0.1/5.8
-//            slide servo position to centimeters:
+//            if sample is picked up perfectly when directly under camera then:
+//
+
             //limelight code
             if (gamepad2.right_stick_x > 0.2 || gamepad2.right_stick_x < -0.2){
                 if (gamepad2.right_stick_x > 0.2) {

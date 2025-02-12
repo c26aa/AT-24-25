@@ -61,8 +61,8 @@ public class SampleAuto extends LinearOpMode {
     private double tolerance = 0.1;
     private double bucketX = 6;
     private int bucketY = 26;
-    private double pickupX = bucketX+7;
-    private double pickupY = 17.2;
+    private double pickupX = bucketX+8;
+    private double pickupY = 18;
     private int lift_top = 1320;
     private int lift_bottom = 0;
     private double placeHeading = -40;
@@ -76,7 +76,7 @@ public class SampleAuto extends LinearOpMode {
     private double speed2 = maxSpeed2; // max value is 0.89
     private double slowSpeed = 0.3;
     private double correctionSpeed = 0.1;
-    private double headingCorrectSpeed = 0.2;
+    private double headingCorrectSpeed = 0.25;
     private double yawSpeed = 0.08;
     private double bigYawSpeed = 0.4;
     private double targetX = 0;
@@ -134,9 +134,7 @@ public class SampleAuto extends LinearOpMode {
         sleep(1000);
         bar_left.setPosition(0.383);
         bar_right.setPosition(0.767);
-        left_right_hinge.setPosition(HINGE_MIDDLE);
         up_down_hinge.setPosition(WRIST_DOWN);
-
     }
 
     public void clawMidPos(){
@@ -248,7 +246,7 @@ public class SampleAuto extends LinearOpMode {
         barl.setPosition(blm);
         barr.setPosition(brm);
         up_down_hinge.setPosition(WRIST_MIDDLE);
-        sleep(400);
+        sleep(1000);
 
         result = limelight.getLatestResult();
         if (result != null) {
@@ -344,10 +342,10 @@ public class SampleAuto extends LinearOpMode {
     // pick up sample and pass thru
     public void passThru(){
         limelight();
-        sleep(1000);
+        sleep(500);
         // position intake arm
         clawPickPos();
-        sleep(1000);
+        sleep(200);
 
         // close claw
         claw.setPosition(0.91);
@@ -362,14 +360,14 @@ public class SampleAuto extends LinearOpMode {
         up_down_hinge.setPosition(0.0);
         sleep(200);
 
-        double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
+        double inAmount = 0.13; // lower will be more in, don't make less than 0 or greater than 0.6
         double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
         double rightPos = RIGHT_SLIDES_IN + inAmount;
         slide_left.setPosition(leftPos);
         slide_right.setPosition(rightPos);
 
         new Thread(() -> {
-            sleep(1300);
+            sleep(1400);
             outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
             sleep(500);
             claw.setPosition(CLAW_OPEN);
@@ -400,10 +398,10 @@ public class SampleAuto extends LinearOpMode {
             odo.update();
 
             double dist = Math.abs(pos.getX(DistanceUnit.INCH) - (bucketX));
-            speed = Math.min(Math.log(dist/8+logAdd), maxSpeed);
-            telemetry.addData("dist", dist);
-            telemetry.addData("intended speed", Math.log(dist/8+logAdd));
-            telemetry.addData("speed", speed);
+            speed = maxSpeed;
+            if (dist < 3){
+                speed = correctionSpeed;
+            }
             telemetry.update();
             if (pos.getX(DistanceUnit.INCH) < bucketX - tolerance){
                 axial = speed;
@@ -577,6 +575,30 @@ public class SampleAuto extends LinearOpMode {
         }
         off();
 
+        while (pos.getX(DistanceUnit.INCH) < pickupX || lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
+            speed = maxSpeed;
+            if (pos.getX(DistanceUnit.INCH) < pickupX){
+                axial = speed;
+                lateral = 0;
+                move();
+            } else {
+                off();
+            }
+
+            if (lift_left.getCurrentPosition() > lift_bottom){
+                lift_left.setPower(-.7);
+                lift_right.setPower(lift_left.getPower());
+            } else {
+                lift_left.setPower(0);
+                lift_right.setPower(lift_left.getPower());
+            }
+            // Update the position
+            pos = odo.getPosition();
+            odo.update();
+        }
+        off();
+
+
         slide_left.setPosition(LEFT_SLIDES_IN);
         slide_right.setPosition(RIGHT_SLIDES_OUT);
 
@@ -608,25 +630,6 @@ public class SampleAuto extends LinearOpMode {
 //        }
 //        off();
 
-//        while (pos.getX(DistanceUnit.INCH) < pickupX || lift_left.getCurrentPosition() > lift_bottom && opModeIsActive()) {
-//            if (pos.getX(DistanceUnit.INCH) < bucketX + 5){
-//                forward();
-//            } else {
-//                off();
-//            }
-//
-//            if (lift_left.getCurrentPosition() > lift_bottom){
-//                lift_left.setPower(-.7);
-//                lift_right.setPower(lift_left.getPower());
-//            } else {
-//                lift_left.setPower(0);
-//                lift_right.setPower(lift_left.getPower());
-//            }
-//            // Update the position
-//            pos = odo.getPosition();
-//            odo.update();
-//        }
-//        off();
 
 //        while (pos.getY(DistanceUnit.INCH) < pickupY + pickupOffset*blockNum- tolerance || pos.getX(DistanceUnit.INCH) > pickupY + pickupOffset*blockNum + tolerance && opModeIsActive()){
 //            if (pos.getY(DistanceUnit.INCH) < pickupY - tolerance){
@@ -800,8 +803,8 @@ public class SampleAuto extends LinearOpMode {
                 grab();
                 place();
                 blockNum += 1;
-                pickupY += 8.5;
-                pickupX += 2.5;
+                pickupY += 7.;
+                pickupX += 3;
 
                 grab();
                 place();
