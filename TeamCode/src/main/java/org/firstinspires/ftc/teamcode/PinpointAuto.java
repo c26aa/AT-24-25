@@ -338,9 +338,9 @@ public class PinpointAuto extends LinearOpMode {
             useLiftEncoder = true;
 //            lift_target = 620;
             if (blockNum > 0){
-                lift_target = 620;
+                lift_target = 630;
             } else {
-                lift_target = 635;
+                lift_target = 650;
             }
         }
 

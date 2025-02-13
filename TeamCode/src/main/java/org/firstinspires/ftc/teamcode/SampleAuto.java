@@ -61,8 +61,8 @@ public class SampleAuto extends LinearOpMode {
     private double tolerance = 0.1;
     private double bucketX = 6;
     private int bucketY = 26;
-    private double pickupX = bucketX+8;
-    private double pickupY = 18;
+    private double pickupX = bucketX+5;
+    private double pickupY = 18.5;
     private int lift_top = 1320;
     private int lift_bottom = 0;
     private double placeHeading = -40;
@@ -75,7 +75,7 @@ public class SampleAuto extends LinearOpMode {
     private double maxSpeed2 = 0.95;
     private double speed2 = maxSpeed2; // max value is 0.89
     private double slowSpeed = 0.3;
-    private double correctionSpeed = 0.1;
+    private double correctionSpeed = 0.15;
     private double headingCorrectSpeed = 0.25;
     private double yawSpeed = 0.08;
     private double bigYawSpeed = 0.4;
@@ -131,7 +131,7 @@ public class SampleAuto extends LinearOpMode {
         claw.setPosition(CLAW_OPEN);
         bar_left.setPosition(0.42);
         bar_right.setPosition(0.73);
-        sleep(1000);
+        sleep(500);
         bar_left.setPosition(0.383);
         bar_right.setPosition(0.767);
         up_down_hinge.setPosition(WRIST_DOWN);
@@ -159,9 +159,9 @@ public class SampleAuto extends LinearOpMode {
         odo.update();
 
         heading = pos.getHeading(AngleUnit.DEGREES);
-        telemetry.addData("heading", heading);
-        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
-        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+//        telemetry.addData("heading", heading);
+//        telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+//        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
         telemetry.update();
 
         while (heading < -0.05 || heading > 0.05){
@@ -169,10 +169,10 @@ public class SampleAuto extends LinearOpMode {
             odo.update();
             heading = pos.getHeading(AngleUnit.DEGREES);
 
-            telemetry.addData("heading", heading);
-            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
-            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
-            telemetry.update();
+//            telemetry.addData("heading", heading);
+//            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+//            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+//            telemetry.update();
 
 //            if it's rotating too much than reverse heading greater than less than
             if (heading > 0.05){
@@ -205,8 +205,8 @@ public class SampleAuto extends LinearOpMode {
 //        telemetry.addData("y", pos.getY(DistanceUnit.INCH));
 //        telemetry.addData("heading", heading);
 //        telemetry.update();
-        telemetry.addData("speed", speed);
-        telemetry.update();
+//        telemetry.addData("speed", speed);
+//        telemetry.update();
 
         yaw = 0;
         if (heading > 0.1){
@@ -246,7 +246,14 @@ public class SampleAuto extends LinearOpMode {
         barl.setPosition(blm);
         barr.setPosition(brm);
         up_down_hinge.setPosition(WRIST_MIDDLE);
-        sleep(1000);
+        sleep(200);
+
+        telemetry.addData("Name", "%s",
+                status.getName());
+        telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+                status.getTemp(), status.getCpu(),(int)status.getFps());
+        telemetry.addData("Pipeline", "Index: %d, Type: %s",
+                status.getPipelineIndex(), status.getPipelineType());
 
         result = limelight.getLatestResult();
         if (result != null) {
@@ -303,12 +310,6 @@ public class SampleAuto extends LinearOpMode {
                 double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
                 double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
 
-
-//                        double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
-//                        double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
-//                        double rightPos = RIGHT_SLIDES_IN + inAmount;
-//                        slide_left.setPosition(leftPos);
-//                        slide_right.setPosition(rightPos);
                 if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1){
                     telemetry.addData("slide position", new_posL);
                     telemetry.addData("slide position", new_posR);
@@ -322,7 +323,13 @@ public class SampleAuto extends LinearOpMode {
                 up_down_hinge.setPosition(WRIST_DOWN);
                 claw.setPosition(CLAW_OPEN);
                 telemetry.update();
+            } else {
+                telemetry.addLine("Result is invalid");
+                telemetry.update();
             }
+        } else {
+            telemetry.addLine("No limelight result");
+            telemetry.update();
         }
     }
 
@@ -349,11 +356,11 @@ public class SampleAuto extends LinearOpMode {
 
         // close claw
         claw.setPosition(0.91);
-        sleep(1000);
+        sleep(700);
         // open outtake claw and move to correct position
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
         top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
-        claw.setPosition(CLAW_CLOSED-0.037);
+        claw.setPosition(CLAW_CLOSED-0.07);
         bar_left.setPosition(0.65);
         bar_right.setPosition(0.51);
         left_right_hinge.setPosition(HINGE_MIDDLE);
@@ -461,7 +468,7 @@ public class SampleAuto extends LinearOpMode {
             pos = odo.getPosition();
             odo.update();
             heading = pos.getHeading(AngleUnit.DEGREES);
-            telemetry.addData("heading", heading);
+//            telemetry.addData("heading", heading);
             double newYawSpeed = bigYawSpeed;
             if (Math.abs(heading-placeHeading) < 5){
                 yaw = correctionSpeed;
@@ -558,8 +565,13 @@ public class SampleAuto extends LinearOpMode {
                 axial = -correctionSpeed;
             }
 
+
+
             double dist = Math.abs(pos.getY(DistanceUnit.INCH) - (pickupY));
-            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+            speed2 = maxSpeed2;
+            if (dist < 2.5){
+                speed2 = correctionSpeed;
+            }
 
             if (pos.getY(DistanceUnit.INCH) < pickupY - tolerance){
                 lateral = -speed2;
@@ -803,8 +815,8 @@ public class SampleAuto extends LinearOpMode {
                 grab();
                 place();
                 blockNum += 1;
-                pickupY += 7.;
-                pickupX += 3;
+                pickupY += 6.5;
+                pickupX += 1.5;
 
                 grab();
                 place();

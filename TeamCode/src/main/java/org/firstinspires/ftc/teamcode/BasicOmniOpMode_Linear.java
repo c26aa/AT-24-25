@@ -134,6 +134,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         telemetry.addData("Status", "Initialized"); // print to control hub
         telemetry.update();
 
+        telemetry.addData("Limelight Stream", "http://limelight.local:5800/stream.mjpg");
+        telemetry.update();
+
         waitForStart();
         runtime.reset();
 
@@ -456,6 +459,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 up_down_hinge.setPosition(WRIST_MIDDLE);
                 sleep(400);
 
+                status = limelight.getStatus();
+                telemetry.addData("Name", "%s",
+                        status.getName());
+                telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d",
+                        status.getTemp(), status.getCpu(),(int)status.getFps());
+                telemetry.addData("Pipeline", "Index: %d, Type: %s",
+                        status.getPipelineIndex(), status.getPipelineType());
+
                 result = limelight.getLatestResult();
                 if (result != null) {
                     if (result.isValid()) {
@@ -531,6 +542,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         claw.setPosition(CLAW_OPEN);
                         telemetry.update();
                     }
+                } else {
+                    telemetry.addLine("No limelight result");
+                    telemetry.update();
                 }
             }
 
