@@ -30,8 +30,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     final double min_pos = HINGE_RIGHT;
     private double bld = 0.38;
     private double brd = 0.77;
-    private double blm = bld + 0.17;
-    private double brm = brd - 0.17;
+    private double blm = bld + 0.18;
+    private double brm = brd - 0.18;
 
 
 
@@ -473,9 +473,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         telemetry.addData("tx", result.getTx());
                         telemetry.addData("ty", result.getTy());
 
-                        double degreeToCM = 3.9/12; // CM per degree
+                        double degreeToCM = 2.01/5; // CM per degree
                         double hingeToCM = -0.1/8; // hinge servo position per CM
-                        double slideToCM = 0.1/6; // slide servo position per CM
+                        double slideToCM = 0.1/5.8; // slide servo position per CM
 
 
                         double cmx = result.getTx()*degreeToCM;
@@ -504,7 +504,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         bar_right.setPosition(0.73);
 
                         double claw_dist = 14.5; // distance from claw to hinge
-                        double camera_dist = 6.5; // distance from camera to hinge
+                        double camera_dist = 8.9; // distance from camera to hinge
                         double clawy = Math.sqrt(Math.abs(claw_dist*claw_dist - (cmx*cmx))); // distance from claw to hinge just on y-axis after being rotated
                         double samp_dist = camera_dist + result.getTy()*degreeToCM; // distance from sample to hinge on y-axis
                         double distY = samp_dist - clawy; // distance from sample to rotated claw/
