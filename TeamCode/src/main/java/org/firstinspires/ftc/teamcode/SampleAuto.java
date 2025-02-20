@@ -263,7 +263,7 @@ public class SampleAuto extends LinearOpMode {
 
                 double degreeToCM = 2.01/5; // CM per degree
                 double hingeToCM = -0.1/8; // hinge servo position per CM
-                double slideToCM = 0.1/5.8; // slide servo position per CM
+                double slideToCM = 0.1/4.4; // slide servo position per CM
 
 
                 double cmx = result.getTx()*degreeToCM;
@@ -362,6 +362,8 @@ public class SampleAuto extends LinearOpMode {
 
     // pick up sample and pass thru
     public void passThru(){
+        slide_left.setPosition(LEFT_SLIDES_IN);
+        slide_right.setPosition(RIGHT_SLIDES_OUT);
         limelight();
         // position intake arm
         clawPickPos();
@@ -624,9 +626,6 @@ public class SampleAuto extends LinearOpMode {
         off();
 
 
-        slide_left.setPosition(LEFT_SLIDES_IN);
-        slide_right.setPosition(RIGHT_SLIDES_OUT);
-
 
         passThru();
 
@@ -816,30 +815,31 @@ public class SampleAuto extends LinearOpMode {
 
             if(!done) {
                 // Set servo positions
-                slide_left.setPosition(LEFT_SLIDES_OUT);
-                slide_right.setPosition(RIGHT_SLIDES_IN);
-                outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
-                top_arm.setPosition(OUTTAKE_ARM_FRONT);
-                clawMidPos();
-                // place preloaded specimen
-                place();
-                blockNum += 1;
-
-                grab();
-                place();
-                blockNum += 1;
-                pickupY += 7.5;
-                pickupX += 1.5;
-
-                grab();
-                place();
-                blockNum += 1;
-                pickupY += 7.5;
-
-                grab();
-                place();
-                blockNum += 1;
-                done = true;
+//                slide_left.setPosition(LEFT_SLIDES_OUT);
+//                slide_right.setPosition(RIGHT_SLIDES_IN);
+//                outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
+//                top_arm.setPosition(OUTTAKE_ARM_FRONT);
+//                clawMidPos();
+//                // place preloaded specimen
+//                place();
+//                blockNum += 1;
+//
+//                grab();
+//                place();
+//                blockNum += 1;
+//                pickupY += 7.5;
+//                pickupX += 1.5;
+//
+//                grab();
+//                place();
+//                blockNum += 1;
+//                pickupY += 7.5;
+//
+//                grab();
+//                place();
+//                blockNum += 1;
+//                done = true;
+                passThru();
             }
 
 

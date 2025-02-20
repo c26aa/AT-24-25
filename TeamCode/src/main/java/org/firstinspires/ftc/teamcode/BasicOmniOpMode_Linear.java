@@ -260,8 +260,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
 
             if (gamepad2.b) {//regular pick up
-                bar_left.setPosition(0.383);
-                bar_right.setPosition(0.767);
+//                bar_left.setPosition(0.383);
+//                bar_right.setPosition(0.767);
+                bar_left.setPosition(0.39);
+                bar_right.setPosition(0.76);
 //                left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_DOWN);
 
@@ -473,9 +475,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         telemetry.addData("tx", result.getTx());
                         telemetry.addData("ty", result.getTy());
 
-                        double degreeToCM = 2.01/5; // CM per degree
+                        double degreeToCM = 2.01/4.5; // CM per degree
                         double hingeToCM = -0.1/8; // hinge servo position per CM
-                        double slideToCM = 0.1/5.8; // slide servo position per CM
+                        double slideToCM = 0.1/4.6; // slide servo position per CM
 
 
                         double cmx = result.getTx()*degreeToCM;
@@ -500,14 +502,20 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         sleep(200);
 //                        bar_left.setPosition(0.38);
 //                        bar_right.setPosition(0.77);
-                        bar_left.setPosition(0.42);
-                        bar_right.setPosition(0.73);
+                        claw.setPosition(CLAW_OPEN);
+                        bar_left.setPosition(0.44);
+                        bar_right.setPosition(0.71);
 
-                        double claw_dist = 14.5; // distance from claw to hinge
-                        double camera_dist = 8.9; // distance from camera to hinge
+                        double claw_dist = 17.5; // distance from claw to hinge
+                        double camera_dist = 8.5; // distance from camera to hinge
                         double clawy = Math.sqrt(Math.abs(claw_dist*claw_dist - (cmx*cmx))); // distance from claw to hinge just on y-axis after being rotated
                         double samp_dist = camera_dist + result.getTy()*degreeToCM; // distance from sample to hinge on y-axis
                         double distY = samp_dist - clawy; // distance from sample to rotated claw/
+
+
+//                        right slides in (lower) is in
+//                        left slides out (higher) is in
+
 
                         telemetry.addData("dist y", distY);
 
@@ -539,7 +547,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         }
 
                         up_down_hinge.setPosition(WRIST_DOWN);
-                        claw.setPosition(CLAW_OPEN);
                         telemetry.update();
                     }
                 } else {
