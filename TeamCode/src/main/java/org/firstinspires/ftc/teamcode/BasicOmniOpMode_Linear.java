@@ -298,16 +298,20 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             // BERMAN's PASS THRU IDEA
             if (gamepad2.x) {//handoff
                 outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
+                new Thread(() -> {
+                    sleep(100);
                 top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
+            }).start();
+                new Thread(() -> {
                 sleep(400);
                 top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
                 claw.setPosition(CLAW_CLOSED-0.037);
                 bar_left.setPosition(0.65);
                 bar_right.setPosition(0.51);
                 left_right_hinge.setPosition(HINGE_MIDDLE);
-                up_down_hinge.setPosition(0.0);
+                up_down_hinge.setPosition(WRIST_UP);
                 sleep(200);
-
+                }).start();
                 double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
                 double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
                 double rightPos = RIGHT_SLIDES_IN + inAmount;
@@ -394,13 +398,16 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
             if (gamepad1.a) {
                 useLiftEncoder = true;
-                lift_target = lift_left.getCurrentPosition() + 250; // Set the lift target
+                lift_target = lift_left.getCurrentPosition() + 50; // Set the lift target
 
                 // Open the claw after a short delay (if needed)
+
                 new Thread(() -> {
+                    sleep(300);
+                    top_arm.setPosition(OUTTAKE_ARM_CLIP);
                     sleep(500); // Adjust this delay if necessary
                     outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
-                    sleep(1000); // Adjust this delay if necessary
+                    sleep(500); // Adjust this delay if necessary
                     top_arm.setPosition(OUTTAKE_ARM_BACK);
                 }).start();
             }
@@ -409,9 +416,12 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 bar_right.setPosition(0.72);
                 left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_MIDDLE);
-                outtake_claw.setPosition(CLAW_OPEN);
+                outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
+                new Thread(() -> {
+                sleep(300);
                 useLiftEncoder = true;
-                lift_target = 200;
+                lift_target = 450;
+                }).start();
                 new Thread(() -> {
                     sleep(1000);
                     top_arm.setPosition(0.8);

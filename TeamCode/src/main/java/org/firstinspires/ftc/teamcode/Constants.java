@@ -21,6 +21,7 @@ public class Constants {
     static final double OUTTAKE_ARM_FRONT = .8; //.8
     static final double OUTTAKE_ARM_BACK = .00;
     static final double OUTTAKE_ARM_BUCKET = .3;
+    static final double OUTTAKE_ARM_CLIP = .55;
 
     static final double LEFT_SLIDES_OUT = .85;
     static final double LEFT_SLIDES_IN = .2;
