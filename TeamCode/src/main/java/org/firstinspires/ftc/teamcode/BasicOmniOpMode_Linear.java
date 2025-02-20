@@ -532,11 +532,15 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 //                        right slides in (lower) is in
 //                        left slides out (higher) is in
 
-
                         telemetry.addData("dist y", distY);
 
                         double slide_posL = slide_left.getPosition();
                         double slide_posR = slide_right.getPosition();
+
+//                        servo needs to move more to achieve same change in distance when further out
+//                        if moving too much, increase denominator slightly
+                        double rotation_adjustment = (1+Math.pow((slide_posR-RIGHT_SLIDES_IN), 2))/1.01;
+                        distY = distY*rotation_adjustment;
 
                         double next_posL = slide_posL - distY*slideToCM;
                         double next_posR = slide_posR + distY*slideToCM;
