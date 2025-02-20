@@ -236,9 +236,15 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 telemetry.addData("Right Lift Power", lift_right.getPower());
                 telemetry.update();
             } else if (gamepad2.dpad_down && lift_left.getCurrentPosition() > 30) {
+                new Thread(() -> {
+                    top_arm.setPosition(OUTTAKE_ARM_BACK);
+                }).start();
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
-                lift_left.setPower(-SCISSORLIFT_POWER);
+                double dist = Math.abs(lift_left.getCurrentPosition());
+                double dist_speed = Math.log(dist/100 + 1.3);
+                double new_slp = Math.max(Math.min(dist_speed, SCISSORLIFT_POWER), 0.3);
+                lift_left.setPower(-new_slp);
 
                 telemetry.addData("Left Lift Power", lift_left.getPower());
                 telemetry.addData("Lift encoder value", lift_left.getCurrentPosition());

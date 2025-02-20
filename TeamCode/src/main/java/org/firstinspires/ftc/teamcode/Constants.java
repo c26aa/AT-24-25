@@ -29,7 +29,7 @@ public class Constants {
     static final double RIGHT_SLIDES_OUT = .9;
     static final double RIGHT_SLIDES_IN = .25;
 
-    static final double SCISSORLIFT_POWER = 0.7;
+    static final double SCISSORLIFT_POWER = 0.9;
 
 
 
