@@ -50,18 +50,18 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 import java.util.Locale;
 
-@Autonomous(name = "sample auto", group = "Linear OpMode")
+@Autonomous(name = "sample auto old", group = "Linear OpMode")
 
-public class SampleAuto extends LinearOpMode {
+public class SampleAutoOld extends LinearOpMode {
     GoBildaPinpointDriver odo; // Declare OpMode member for the Odometry Computer
 
     double oldTime = 0;
 
     private int blockNum = 0;
     private double tolerance = 0.1;
-    private double bucketX = 6.5;
+    private double bucketX = 6;
     private int bucketY = 27;
-    private double pickupX = bucketX+7.5;
+    private double pickupX = bucketX+7;
     private double pickupY = 18.5;
     private int lift_top = 1320;
     private int lift_bottom = 0;
@@ -69,7 +69,7 @@ public class SampleAuto extends LinearOpMode {
     boolean moveStuff = true;
     boolean liftPosition = true;
     private double heading = 0.0;
-    private double passTime = -1500;
+    private int distOff = 2;
     private double maxSpeed = 0.75;
     private double speed = maxSpeed;
     private double maxSpeed2 = 0.95;
@@ -412,16 +412,12 @@ public class SampleAuto extends LinearOpMode {
             outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
             sleep(500);
             claw.setPosition(CLAW_OPEN);
-//            top_arm.setPosition(OUTTAKE_ARM_BACK);
+            top_arm.setPosition(OUTTAKE_ARM_BACK);
         }).start();
 
-        passTime = runtime.milliseconds();
-//        sleep(2900);
+        sleep(2900);
         top_arm.setPosition(OUTTAKE_ARM_FRONT);
-        new Thread(() -> {
-            sleep(2900);
-            clawMidPos();
-        }).start();
+        clawMidPos();
     }
 
     // place the sample
@@ -458,14 +454,6 @@ public class SampleAuto extends LinearOpMode {
                 lateral = 0;
                 move();
             }
-
-            if (lift_left.getCurrentPosition() < lift_top && runtime.milliseconds() > passTime + 4000 && opModeIsActive()){
-                lift_left.setPower(.8);
-                lift_right.setPower(lift_left.getPower());
-            } else {
-                lift_left.setPower(0);
-                lift_right.setPower(lift_left.getPower());
-            }
         }
         off();
 
@@ -501,14 +489,6 @@ public class SampleAuto extends LinearOpMode {
                 lateral = speed2;
                 move();
             }
-
-            if (lift_left.getCurrentPosition() < lift_top && runtime.milliseconds() > passTime + 4000 && opModeIsActive()){
-                lift_left.setPower(.8);
-                lift_right.setPower(lift_left.getPower());
-            } else {
-                lift_left.setPower(0);
-                lift_right.setPower(lift_left.getPower());
-            }
             // Update the position
             pos = odo.getPosition();
             odo.update();
@@ -535,14 +515,6 @@ public class SampleAuto extends LinearOpMode {
             else if (heading < placeHeading - tolerance){
                 yaw = -newYawSpeed;
                 rotate();
-            }
-
-            if (lift_left.getCurrentPosition() < lift_top && runtime.milliseconds() > passTime + 4000 && opModeIsActive()){
-                lift_left.setPower(.8);
-                lift_right.setPower(lift_left.getPower());
-            } else {
-                lift_left.setPower(0);
-                lift_right.setPower(lift_left.getPower());
             }
         }
         leftFrontDrive.setPower(0);
@@ -622,7 +594,7 @@ public class SampleAuto extends LinearOpMode {
             targetX = pickupX;
             axial = 0;
             if (pos.getX(DistanceUnit.INCH) < targetX - tolerance){
-                axial = correctionSpeed+0.1;
+                axial = correctionSpeed;
             } else if (pos.getX(DistanceUnit.INCH) > targetX + tolerance){
                 axial = -correctionSpeed;
             }
@@ -646,14 +618,6 @@ public class SampleAuto extends LinearOpMode {
             // Update the position
             pos = odo.getPosition();
             odo.update();
-
-//            if (lift_left.getCurrentPosition() > lift_bottom){
-//                lift_left.setPower(-.7);
-//                lift_right.setPower(lift_left.getPower());
-//            } else {
-//                lift_left.setPower(0);
-//                lift_right.setPower(lift_left.getPower());
-//            }
         }
         off();
 
@@ -878,16 +842,15 @@ public class SampleAuto extends LinearOpMode {
                 // place preloaded specimen
                 place();
                 blockNum += 1;
-                bucketX += 6;
-                bucketY -= 4;
+                bucketX += 5;
+                bucketY += 1;
 
                 grab();
                 place();
                 blockNum += 1;
                 pickupY += 8.5;
-                pickupX += 2;
-                bucketX -= 6;
-                bucketY -= 5;
+                pickupX += 1.5;
+                bucketY -= 1;
 
                 grab();
                 place();
