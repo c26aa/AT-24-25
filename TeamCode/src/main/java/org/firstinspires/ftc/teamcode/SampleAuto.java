@@ -61,7 +61,7 @@ public class SampleAuto extends LinearOpMode {
     private double tolerance = 0.1;
     private double bucketX = 6.5;
     private int bucketY = 27;
-    private double pickupX = bucketX+7.5;
+    private double pickupX = bucketX+8;
     private double pickupY = 18.5;
     private int lift_top = 1320;
     private int lift_bottom = 0;
@@ -454,7 +454,7 @@ public class SampleAuto extends LinearOpMode {
                 move();
             }
             if (pos.getX(DistanceUnit.INCH) > bucketX + tolerance){
-                axial = -speed;
+                axial = -correctionSpeed-0.2;
                 lateral = 0;
                 move();
             }
@@ -878,15 +878,15 @@ public class SampleAuto extends LinearOpMode {
                 // place preloaded specimen
                 place();
                 blockNum += 1;
-                bucketX += 6;
-                bucketY -= 4;
+                bucketX += 1;
+                bucketY -= 2;
 
                 grab();
                 place();
                 blockNum += 1;
                 pickupY += 8.5;
-                pickupX += 2;
-                bucketX -= 6;
+                pickupX += 1;
+                bucketX += 1;
                 bucketY -= 5;
 
                 grab();
