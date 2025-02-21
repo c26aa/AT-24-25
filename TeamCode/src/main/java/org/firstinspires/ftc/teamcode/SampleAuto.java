@@ -450,7 +450,11 @@ public class SampleAuto extends LinearOpMode {
             telemetry.update();
             if (pos.getX(DistanceUnit.INCH) < bucketX - tolerance){
                 axial = speed;
-                lateral = -0.8;
+                if (blockNum == 0){
+                    lateral = -0.8;
+                } else {
+                    lateral = 0;
+                }
                 move();
             }
             if (pos.getX(DistanceUnit.INCH) > bucketX + tolerance){
@@ -472,46 +476,48 @@ public class SampleAuto extends LinearOpMode {
         pos = odo.getPosition();
         odo.update();
         //    align with bucket left and right
-        while (pos.getY(DistanceUnit.INCH) < bucketY - tolerance || pos.getY(DistanceUnit.INCH) > bucketY + tolerance && opModeIsActive()) {
-            // Update the position
-            pos = odo.getPosition();
-            odo.update();
+        if (blockNum < 3) {
+            while (pos.getY(DistanceUnit.INCH) < bucketY - tolerance || pos.getY(DistanceUnit.INCH) > bucketY + tolerance && opModeIsActive()) {
+                // Update the position
+                pos = odo.getPosition();
+                odo.update();
 
-            targetX = bucketX;
-            axial = 0;
-            if (pos.getX(DistanceUnit.INCH) < targetX - tolerance){
-                axial = correctionSpeed;
-            } else if (pos.getX(DistanceUnit.INCH) > targetX + tolerance){
-                axial = -correctionSpeed;
-            }
+                targetX = bucketX;
+                axial = 0;
+                if (pos.getX(DistanceUnit.INCH) < targetX - tolerance) {
+                    axial = correctionSpeed;
+                } else if (pos.getX(DistanceUnit.INCH) > targetX + tolerance) {
+                    axial = -correctionSpeed;
+                }
 
-            double dist = Math.abs(pos.getY(DistanceUnit.INCH) - (bucketY));
-            if (dist < 5){
-                speed2 = 0.25;
-            } else {
-                speed2 = maxSpeed2;
-            }
+                double dist = Math.abs(pos.getY(DistanceUnit.INCH) - (bucketY));
+                if (dist < 5) {
+                    speed2 = 0.25;
+                } else {
+                    speed2 = maxSpeed2;
+                }
 //            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
 
-            if (pos.getY(DistanceUnit.INCH) < bucketY - tolerance){
-                lateral = -speed2;
-                move();
-            }
-            if (pos.getY(DistanceUnit.INCH) > bucketY + tolerance){
-                lateral = speed2;
-                move();
-            }
+                if (pos.getY(DistanceUnit.INCH) < bucketY - tolerance) {
+                    lateral = -speed2;
+                    move();
+                }
+                if (pos.getY(DistanceUnit.INCH) > bucketY + tolerance) {
+                    lateral = speed2;
+                    move();
+                }
 
-            if (lift_left.getCurrentPosition() < lift_top && runtime.milliseconds() > passTime + 4000 && opModeIsActive()){
-                lift_left.setPower(.8);
-                lift_right.setPower(lift_left.getPower());
-            } else {
-                lift_left.setPower(0);
-                lift_right.setPower(lift_left.getPower());
+                if (lift_left.getCurrentPosition() < lift_top && runtime.milliseconds() > passTime + 4000 && opModeIsActive()) {
+                    lift_left.setPower(.8);
+                    lift_right.setPower(lift_left.getPower());
+                } else {
+                    lift_left.setPower(0);
+                    lift_right.setPower(lift_left.getPower());
+                }
+                // Update the position
+                pos = odo.getPosition();
+                odo.update();
             }
-            // Update the position
-            pos = odo.getPosition();
-            odo.update();
         }
 
         pos = odo.getPosition();
@@ -879,13 +885,13 @@ public class SampleAuto extends LinearOpMode {
                 place();
                 blockNum += 1;
                 bucketX += 1;
-                bucketY -= 2;
+                bucketY -= 3;
 
                 grab();
                 place();
                 blockNum += 1;
                 pickupY += 8.5;
-                pickupX += 1;
+                pickupX += 0;
                 bucketX += 1;
                 bucketY -= 5;
 

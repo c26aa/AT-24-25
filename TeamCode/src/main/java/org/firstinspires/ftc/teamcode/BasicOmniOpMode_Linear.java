@@ -32,6 +32,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private double brd = 0.77;
     private double blm = bld + 0.18;
     private double brm = brd - 0.18;
+    private boolean done = false;
 
 
 
@@ -140,7 +141,13 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+
+
         while (opModeIsActive()) {
+            if (!done){
+                top_arm.setPosition(OUTTAKE_ARM_FRONT);
+                done = true;
+            }
             double max;
 
 
@@ -268,8 +275,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad2.b) {//regular pick up
 //                bar_left.setPosition(0.383);
 //                bar_right.setPosition(0.767);
-                bar_left.setPosition(0.39);
-                bar_right.setPosition(0.76);
+                bar_left.setPosition(0.41);
+                bar_right.setPosition(0.74);
 //                left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_DOWN);
 
@@ -311,7 +318,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 new Thread(() -> {
                     sleep(400);
                     top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
-                    claw.setPosition(CLAW_CLOSED-0.037);
+                    claw.setPosition(CLAW_CLOSED-0.06);
                     bar_left.setPosition(0.65);
                     bar_right.setPosition(0.51);
                     left_right_hinge.setPosition(HINGE_MIDDLE);
@@ -330,7 +337,16 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     sleep(500);
                     claw.setPosition(CLAW_OPEN);
                     top_arm.setPosition(OUTTAKE_ARM_BACK);
+                    new Thread(() -> {
+                        sleep(800);
+                        double inA = 0.35; // lower will be more in, don't make less than 0 or greater than 0.6
+                        double lPos = LEFT_SLIDES_OUT - inA; // left slides out is actually the in position
+                        double rPos = RIGHT_SLIDES_IN + inA;
+                        slide_left.setPosition(lPos);
+                        slide_right.setPosition(rPos);
+                    }).start();
                 }).start();
+
             }
 
 
