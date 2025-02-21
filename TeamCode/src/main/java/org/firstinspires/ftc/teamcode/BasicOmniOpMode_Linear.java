@@ -306,17 +306,17 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                 new Thread(() -> {
                     sleep(100);
-                top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
-            }).start();
+                    top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
+                }).start();
                 new Thread(() -> {
-                sleep(400);
-                top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
-                claw.setPosition(CLAW_CLOSED-0.037);
-                bar_left.setPosition(0.65);
-                bar_right.setPosition(0.51);
-                left_right_hinge.setPosition(HINGE_MIDDLE);
-                up_down_hinge.setPosition(WRIST_UP);
-                sleep(200);
+                    sleep(400);
+                    top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
+                    claw.setPosition(CLAW_CLOSED-0.037);
+                    bar_left.setPosition(0.65);
+                    bar_right.setPosition(0.51);
+                    left_right_hinge.setPosition(HINGE_MIDDLE);
+                    up_down_hinge.setPosition(WRIST_UP);
+                    sleep(200);
                 }).start();
                 double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
                 double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
@@ -424,9 +424,9 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 up_down_hinge.setPosition(WRIST_MIDDLE);
                 outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
                 new Thread(() -> {
-                sleep(300);
-                useLiftEncoder = true;
-                lift_target = 450;
+                    sleep(300);
+                    useLiftEncoder = true;
+                    lift_target = 450;
                 }).start();
                 new Thread(() -> {
                     sleep(1000);
@@ -532,6 +532,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 //                        right slides in (lower) is in
 //                        left slides out (higher) is in
 
+
                         telemetry.addData("dist y", distY);
 
                         double slide_posL = slide_left.getPosition();
@@ -539,7 +540,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
 //                        servo needs to move more to achieve same change in distance when further out
 //                        if moving too much, increase denominator slightly
-                        double rotation_adjustment = (1+Math.pow((slide_posR-RIGHT_SLIDES_IN), 2))/1.01;
+
+                        double rotation_adjustment = (1+Math.pow((slide_posR-RIGHT_SLIDES_IN), 2))/1.1;
                         distY = distY*rotation_adjustment;
 
                         double next_posL = slide_posL - distY*slideToCM;
