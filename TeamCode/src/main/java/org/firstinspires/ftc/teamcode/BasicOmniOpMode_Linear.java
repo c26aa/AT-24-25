@@ -318,14 +318,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 new Thread(() -> {
                     sleep(400);
                     top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
-                    claw.setPosition(CLAW_CLOSED-0.06);
+                    claw.setPosition(CLAW_CLOSED-0.05);
                     bar_left.setPosition(0.65);
                     bar_right.setPosition(0.51);
                     left_right_hinge.setPosition(HINGE_MIDDLE);
                     up_down_hinge.setPosition(WRIST_UP);
                     sleep(200);
                 }).start();
-                double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
+                double inAmount = 0.13; // lower will be more in, don't make less than 0 or greater than 0.6
                 double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
                 double rightPos = RIGHT_SLIDES_IN + inAmount;
                 slide_left.setPosition(leftPos);
