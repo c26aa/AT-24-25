@@ -422,14 +422,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
             if (gamepad1.a) {
                 useLiftEncoder = true;
-                lift_target = lift_left.getCurrentPosition() + 100; // Set the lift target
+                lift_target = lift_left.getCurrentPosition() + 300; // Set the lift target
 
                 // Open the claw after a short delay (if needed)
 
                 new Thread(() -> {
                     sleep(300);
                     top_arm.setPosition(OUTTAKE_ARM_CLIP);
-                    sleep(500); // Adjust this delay if necessary
+                    sleep(1000); // Adjust this delay if necessary
                     outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                     sleep(500); // Adjust this delay if necessary
                     top_arm.setPosition(OUTTAKE_ARM_BACK);
@@ -444,7 +444,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 new Thread(() -> {
                     sleep(300);
                     useLiftEncoder = true;
-                    lift_target = 450;
+                    lift_target = 415;
                 }).start();
                 new Thread(() -> {
                     sleep(1000);
