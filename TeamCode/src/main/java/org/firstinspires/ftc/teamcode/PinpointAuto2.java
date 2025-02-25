@@ -23,9 +23,6 @@ package org.firstinspires.ftc.teamcode;
  */
 
 
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLStatus;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -40,10 +37,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import static org.firstinspires.ftc.teamcode.Constants.*;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 import java.util.Locale;
 
@@ -73,7 +66,7 @@ For support, contact tech@gobilda.com
 -Ethan Doak
  */
 
-@Autonomous(name = "rotate specimen auto", group = "Linear OpMode")
+@Autonomous(name = "specimen auto 4", group = "Linear OpMode")
 //@Disabled
 
 public class PinpointAuto2 extends LinearOpMode {
@@ -86,10 +79,10 @@ public class PinpointAuto2 extends LinearOpMode {
     private double currentPosition1 = 0.3; // Start the servo at the middle position
     private int blockNum = 0;
     private int numSamp = 1;
-    private int sampX = 38;
+    private int sampX = 41;
     private int sampY = -48;
-    private int laneX = 22;
-    private int laneY = -33;
+    private int laneX = 23;
+    private int laneY = -32;
     //    private  int dropX = 18;
     private  int dropX = 21;
 
@@ -98,7 +91,6 @@ public class PinpointAuto2 extends LinearOpMode {
     private double placeX = 29.5;
     private int placeY = 20;
     private int placementOffset = -3;
-    private int sampOffset = -8;
     public boolean useLiftEncoder = false;
     public int lift_target = 0;
     boolean moveStuff = true;
@@ -107,34 +99,17 @@ public class PinpointAuto2 extends LinearOpMode {
     private double heading = 0.0;
     //    private int distOff = 9;
     private int distOff = 2;
-    private double headingCorrectSpeed = 0.2;
-    private double maxSpeed = 0.75;
+    private double maxSpeed = 0.8;
     private double speed = maxSpeed;
     private double maxSpeed2 = 0.95;
     private double speed2 = maxSpeed2; // max value is 0.89
     private double targetX = 0;
     private double targetY = 0;
-    private double placeHeading = -120;
-    private double pickHeading = -30;
-    private double moveHeading = -90;
-    private double tolerance = 0.1;
     private double logAdd = 1.01;
     private double axial = 0.0;
     private double lateral = 0.0;
     private double yaw = 0.0;
-    private double bigYawSpeed = 0.4;
-    private double correctionSpeed = 0.1;
-    private Limelight3A limelight;
-    private Servo leftRightHinge = null;
-    private Servo barl = null;
-    private Servo barr = null;
-    final double max_pos = HINGE_LEFT;
-    final double mid_pos = HINGE_MIDDLE;
-    final double min_pos = HINGE_RIGHT;
-    private double bld = 0.38;
-    private double brd = 0.77;
-    private double blm = bld + 0.17;
-    private double brm = brd - 0.17;
+
     // Declare OpMode members for each of the 4 motors.
     private final ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftFrontDrive = null;
@@ -208,18 +183,6 @@ public class PinpointAuto2 extends LinearOpMode {
         rightBackDrive.setPower(rightBackPower);
     }
 
-    public void rotate(){
-        double leftFrontPower = yaw;
-        double rightFrontPower = -yaw;
-        double leftBackPower = yaw;
-        double rightBackPower = -yaw;
-
-        leftFrontDrive.setPower(leftFrontPower);
-        rightFrontDrive.setPower(rightFrontPower);
-        leftBackDrive.setPower(leftBackPower);
-        rightBackDrive.setPower(rightBackPower);
-    }
-
     public void headingCorrect(){
         odo.update();
 
@@ -230,8 +193,16 @@ public class PinpointAuto2 extends LinearOpMode {
 
         // Get the current Position (x & y in mm, and heading in degrees) of the robot
         Pose2D pos = odo.getPosition();
-        odo.update();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
 
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        pos = odo.getPosition();
+        odo.update();
         heading = pos.getHeading(AngleUnit.DEGREES);
         telemetry.addData("heading", heading);
         telemetry.addData("x", pos.getX(DistanceUnit.INCH));
@@ -250,16 +221,16 @@ public class PinpointAuto2 extends LinearOpMode {
 
 //            if it's rotating too much than reverse heading greater than less than
             if (heading > 0.05){
-                leftFrontDrive.setPower(headingCorrectSpeed);
-                leftBackDrive.setPower(headingCorrectSpeed);
-                rightBackDrive.setPower(-headingCorrectSpeed);
-                rightFrontDrive.setPower(-headingCorrectSpeed);
+                leftFrontDrive.setPower(0.165);
+                leftBackDrive.setPower(0.165);
+                rightBackDrive.setPower(-0.165);
+                rightFrontDrive.setPower(-0.165);
             }
             if (heading < -0.05){
-                leftFrontDrive.setPower(-headingCorrectSpeed);
-                leftBackDrive.setPower(-headingCorrectSpeed);
-                rightBackDrive.setPower(headingCorrectSpeed);
-                rightFrontDrive.setPower(headingCorrectSpeed);
+                leftFrontDrive.setPower(-0.165);
+                leftBackDrive.setPower(-0.165);
+                rightBackDrive.setPower(0.165);
+                rightFrontDrive.setPower(0.165);
             }
 
         }
@@ -273,104 +244,9 @@ public class PinpointAuto2 extends LinearOpMode {
 
     public void pickupClawAction(){
         sleep(300);
-        outtake_claw.setPosition(.45);
+        outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
         sleep(300);
-        top_arm.setPosition(0.8);
-    }
-
-    public void limelightAction(){
-        slide_left.setPosition(LEFT_SLIDES_IN);
-        slide_right.setPosition(RIGHT_SLIDES_OUT);
-        sleep(100);
-
-        LLStatus status = limelight.getStatus();
-        LLResult result = limelight.getLatestResult();
-
-        leftRightHinge.setPosition(mid_pos);
-        barl.setPosition(blm);
-        barr.setPosition(brm);
-        up_down_hinge.setPosition(WRIST_MIDDLE);
-        sleep(400);
-
-        result = limelight.getLatestResult();
-        if (result != null) {
-            if (result.isValid()) {
-                telemetry.addData("tx", result.getTx());
-                telemetry.addData("ty", result.getTy());
-
-                double degreeToCM = 3.9/12; // CM per degree
-                double hingeToCM = -0.1/8; // hinge servo position per CM
-                double slideToCM = 0.1/6; // slide servo position per CM
-
-
-                double cmx = result.getTx()*degreeToCM;
-
-                double arm_pos = mid_pos + (cmx * hingeToCM);
-                if (arm_pos < min_pos) {
-                    arm_pos = min_pos;
-                } else if (arm_pos > max_pos) {
-                    arm_pos = max_pos;
-                }
-
-                if (arm_pos > 0 && arm_pos < 1){
-                    leftRightHinge.setPosition(arm_pos);
-                    telemetry.addData("cmx", cmx);
-                    telemetry.addData("intended arm pos", mid_pos + (cmx * hingeToCM));
-                    telemetry.addData("arm pos position good", arm_pos);
-                } else {
-                    telemetry.addData("arm pos position wrong", arm_pos);
-                }
-
-                // arm down
-                sleep(200);
-//                        bar_left.setPosition(0.38);
-//                        bar_right.setPosition(0.77);
-                bar_left.setPosition(0.42);
-                bar_right.setPosition(0.73);
-
-                double claw_dist = 14.5; // distance from claw to hinge
-                double camera_dist = 6.5; // distance from camera to hinge
-                double clawy = Math.sqrt(Math.abs(claw_dist*claw_dist - (cmx*cmx))); // distance from claw to hinge just on y-axis after being rotated
-                double samp_dist = camera_dist + result.getTy()*degreeToCM; // distance from sample to hinge on y-axis
-                double distY = samp_dist - clawy; // distance from sample to rotated claw/
-
-                telemetry.addData("dist y", distY);
-
-                double slide_posL = slide_left.getPosition();
-                double slide_posR = slide_right.getPosition();
-
-                double next_posL = slide_posL - distY*slideToCM;
-                double next_posR = slide_posR + distY*slideToCM;
-
-                telemetry.addData("intended slide position", next_posR);
-
-                double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
-                double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
-
-                if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1){
-                    telemetry.addData("slide position", new_posL);
-                    telemetry.addData("slide position", new_posR);
-                    slide_left.setPosition(new_posL);
-                    slide_right.setPosition(new_posR);
-                } else {
-                    telemetry.addData("slide position wrong", new_posL);
-                    telemetry.addData("slide position wrong", new_posR);
-                }
-
-                up_down_hinge.setPosition(WRIST_DOWN);
-                claw.setPosition(CLAW_OPEN);
-                sleep(200);
-                bar_left.setPosition(0.383);
-                bar_right.setPosition(0.767);
-                up_down_hinge.setPosition(WRIST_DOWN);
-                sleep(200);
-                claw.setPosition(CLAW_CLOSED);
-                sleep(200);
-                up_down_hinge.setPosition(WRIST_MIDDLE);
-
-                telemetry.update();
-            }
-        }
+        top_arm.setPosition(OUTTAKE_ARM_FRONT);
     }
 
 
@@ -400,9 +276,8 @@ public class PinpointAuto2 extends LinearOpMode {
             useLiftEncoder = true;
             lift_target = 490;
             if (blockNum > 0){
-                lift_target = 430;
+                lift_target = 420;
             } if (blockNum == 1){
-//                lift_target = 420;
                 lift_target = 420;
             }
 
@@ -418,6 +293,10 @@ public class PinpointAuto2 extends LinearOpMode {
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             targetX = 29+distOff*blockNum;
+            if (blockNum == 3){
+                placementOffset += 0.5;
+            }
+
             targetY = placementOffset*(blockNum*2);
             telemetry.addData("lift val", lift_left.getCurrentPosition() + 15);
             heading = pos.getHeading(AngleUnit.DEGREES);
@@ -425,8 +304,6 @@ public class PinpointAuto2 extends LinearOpMode {
 //            uncomment once lift is ready
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.95);
-            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                lift_left.setPower(-.8);
             } else {
                 lift_left.setPower(0);
             }
@@ -444,10 +321,6 @@ public class PinpointAuto2 extends LinearOpMode {
             }
 
             move();
-        } while (pos.getX(DistanceUnit.INCH) > placeX+2+distOff*blockNum && opModeIsActive()){
-            axial = -0.2;
-            lateral= 0;
-            move();
         }
 
         // Stop the drive motors
@@ -462,22 +335,20 @@ public class PinpointAuto2 extends LinearOpMode {
             useLiftEncoder = true;
 //            lift_target = 620;
             if (blockNum > 0){
-                lift_target = 620;
+                lift_target = 630;
             } else {
-                lift_target = 635;
+                lift_target = 660;
             }
         }
 
         //  pull claw back and lift scissor lift to place sample
-        top_arm.setPosition(.2);
+        top_arm.setPosition(OUTTAKE_ARM_BUCKET);
 //        uncomment once lift is ready
         while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
             telemetry.update();
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.8);
-            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                lift_left.setPower(-.5);
             } else {
                 lift_left.setPower(0);
             }
@@ -488,8 +359,9 @@ public class PinpointAuto2 extends LinearOpMode {
 
         // Adjust the outtake claw and top arm positions
         sleep(100);
-        outtake_claw.setPosition(.2);
-        top_arm.setPosition(.1);
+        outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
+        sleep(100);
+        top_arm.setPosition(OUTTAKE_ARM_BACK);
         lift_target = 0;
 
         //  Lower scissor lift
@@ -515,7 +387,7 @@ public class PinpointAuto2 extends LinearOpMode {
     }
 
     // this function goes from the placed specimen to the first sample on the field
-    public void toSamp(){
+    public void subToSamp(){
         odo.update();
 
         double newTime = getRuntime();
@@ -533,34 +405,28 @@ public class PinpointAuto2 extends LinearOpMode {
         String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Velocity", velocity);
 
-        off();
-
         //    reverse closer to wall to avoid hitting the corner of the submersible
-        if (blockNum == 1){
-            while (pos.getX(DistanceUnit.INCH) > laneX && opModeIsActive()) {
-                pos = odo.getPosition();
-                odo.update();
+        while (pos.getX(DistanceUnit.INCH) > laneX && opModeIsActive()) {
+            pos = odo.getPosition();
+            odo.update();
 
-                double dist = Math.abs(pos.getX(DistanceUnit.INCH) - laneX);
-                speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - laneX);
+            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
-                targetX = laneX;
-                targetY = 0;
+            targetX = laneX;
+            targetY = 0;
 
-                telemetry.addData("y", pos.getY(DistanceUnit.INCH));
-                telemetry.addData("x", pos.getX(DistanceUnit.INCH));
-                telemetry.addLine("sub to samp");
-                telemetry.update();
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.addLine("sub to samp");
+            telemetry.update();
 
-                axial = -speed;
-                lateral = 0;
-                move();
-            }
-            off();
+            axial = -speed;
+            lateral = 0;
+            move();
         }
-
         //  drive to the lane between the submersible and block
-        while (pos.getY(DistanceUnit.INCH) > laneY+sampOffset*numSamp && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > laneY && opModeIsActive()) {
             targetX = laneX;
             targetY = laneY;
 
@@ -577,19 +443,77 @@ public class PinpointAuto2 extends LinearOpMode {
             axial = 0;
             lateral = speed2;
 
-            if (blockNum > 1){
-                axial = speed;
-                lateral = 0;
-            } else {
-                if (pos.getX(DistanceUnit.INCH) < targetX - 0.1){
-                    axial = 0.2;
-                } else if (pos.getX(DistanceUnit.INCH) > targetX + 0.2){
-                    axial = -0.2;
-                }
+            if (pos.getX(DistanceUnit.INCH) < targetX - 0.1){
+                axial = 0.2;
+            } else if (pos.getX(DistanceUnit.INCH) > targetX + 0.2){
+                axial = -0.2;
             }
 
             move();
         }
+        off();
+//        // correct
+//        pos = odo.getPosition();
+//        odo.update();
+//        while ((pos.getY(DistanceUnit.INCH) < -37 && opModeIsActive())){
+//            pos = odo.getPosition();
+//            odo.update();
+//
+//            axial = 0;
+//            lateral = -0.3;
+//            move();
+//        }
+////        while (pos.getY(DistanceUnit.INCH) > -35 && opModeIsActive())
+//        off();
+
+        // strafe along side a block to be able to drive behind it next
+        while (pos.getX(DistanceUnit.INCH) < sampX && opModeIsActive()) {
+            pos = odo.getPosition();
+            odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - sampX);
+            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+
+            targetX = sampX;
+            targetY = -36;
+
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.update();
+
+            axial = speed;
+            lateral = -0.08;
+            move();
+        }
+        off();
+
+        //    go directly behind a block
+        while (pos.getY(DistanceUnit.INCH) > sampY && opModeIsActive()) {
+            pos = odo.getPosition();
+            odo.update();
+
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) + 47);
+            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+
+            targetX = sampX;
+            targetY = sampY;
+
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.update();
+
+            axial = 0;
+            lateral = speed2;
+
+            if (pos.getX(DistanceUnit.INCH) < targetX){
+                axial = -0.02;
+            } else if (pos.getX(DistanceUnit.INCH) > targetX + 0.1){
+                axial = 0.02;
+            }
+
+            move();
+        }
+//        off();
     }
 
     //    push sample straight into human player zone (this function will be run 3 times)
@@ -611,89 +535,94 @@ public class PinpointAuto2 extends LinearOpMode {
         String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Velocity", velocity);
 
-        pos = odo.getPosition();
-        odo.update();
-
-        heading = pos.getHeading(AngleUnit.DEGREES);
-        while (heading > pickHeading + tolerance || heading < pickHeading - tolerance){
+        while (pos.getX(DistanceUnit.INCH) > dropX && opModeIsActive()) {
             pos = odo.getPosition();
             odo.update();
-            heading = pos.getHeading(AngleUnit.DEGREES);
-            telemetry.addData("heading", heading);
-            double newYawSpeed = bigYawSpeed;
-            if (Math.abs(heading-pickHeading) < 2){
-                newYawSpeed =  headingCorrectSpeed;
-            }
+
+//            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - dropX);
+//            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+
+            targetX = dropX;
+            targetY = sampY- 5*numSamp;
+
+            telemetry.addData("y", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("x", pos.getX(DistanceUnit.INCH));
+            telemetry.addLine("dropoff");
             telemetry.update();
-            if (heading > pickHeading + tolerance){
-                yaw = newYawSpeed;
-                rotate();
+
+            axial = -speed;
+            lateral = 0;
+
+            if (pos.getX(DistanceUnit.INCH) > targetY){
+                lateral = 0.02;
+            } else if (pos.getX(DistanceUnit.INCH) < targetY - 0.1){
+                lateral = -0.02;
             }
-            else if (heading < pickHeading - tolerance){
-                yaw = -newYawSpeed;
-                rotate();
-            }
+
+            move();
         }
-        leftFrontDrive.setPower(0);
-        leftBackDrive.setPower(0);
-        rightBackDrive.setPower(0);
-        rightFrontDrive.setPower(0);
-
-        limelightAction();
-
-        odo.update();
-        heading = pos.getHeading(AngleUnit.DEGREES);
-        while (heading > placeHeading + tolerance || heading < placeHeading - tolerance){
-            pos = odo.getPosition();
-            odo.update();
-            heading = pos.getHeading(AngleUnit.DEGREES);
-            telemetry.addData("heading", heading);
-            double newYawSpeed = bigYawSpeed;
-            if (Math.abs(heading-placeHeading) < 2){
-                newYawSpeed =  headingCorrectSpeed;
-            }
-            telemetry.update();
-            if (heading > placeHeading + tolerance){
-                yaw = newYawSpeed;
-                rotate();
-            }
-            else if (heading < placeHeading - tolerance){
-                yaw = -newYawSpeed;
-                rotate();
-            }
-        }
-        leftFrontDrive.setPower(0);
-        leftBackDrive.setPower(0);
-        rightBackDrive.setPower(0);
-        rightFrontDrive.setPower(0);
-        claw.setPosition(CLAW_OPEN);
-        sleep(100);
-
-
-        odo.update();
-        heading = pos.getHeading(AngleUnit.DEGREES);
-        while (heading > moveHeading + tolerance || heading < moveHeading - tolerance){
-            pos = odo.getPosition();
-            odo.update();
-            heading = pos.getHeading(AngleUnit.DEGREES);
-            telemetry.addData("heading", heading);
-            double newYawSpeed = bigYawSpeed;
-            if (Math.abs(heading-moveHeading) < 2){
-                newYawSpeed =  headingCorrectSpeed;
-            }
-            telemetry.update();
-            if (heading > moveHeading + tolerance){
-                yaw = newYawSpeed;
-                rotate();
-            }
-            else if (heading < moveHeading - tolerance){
-                yaw = -newYawSpeed;
-                rotate();
-            }
-        }
-
+        off();
     }
 
+    //        take numSamp as an argument and add that distance needed to be covered
+    //    go from drop off to the next sample that needs to be pushed (this function will be run 2 times)
+    public void dropToSamp(){
+        odo.update();
+
+        double newTime = getRuntime();
+        double loopTime = newTime - oldTime;
+        double frequency = 1 / loopTime;
+        oldTime = newTime;
+
+        // Get the current Position (x & y in mm, and heading in degrees) of the robot
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+        // Get the current Velocity (x & y in mm/sec and heading in degrees/sec)
+        Pose2D vel = odo.getVelocity();
+        String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Velocity", velocity);
+
+        // strafe along side a block to be able to drive behind it next
+        while (pos.getX(DistanceUnit.INCH) < sampX && opModeIsActive()) {
+            targetX = sampX;
+            targetY = sampY- 6*(numSamp-1);
+
+            pos = odo.getPosition();
+            odo.update();
+
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - sampX);
+            speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
+
+            axial = speed;
+            lateral = -0.35;
+
+            move();
+        }
+//        off();
+
+        //  drive behind block
+        while (pos.getY(DistanceUnit.INCH) > sampY - 5.5*numSamp && opModeIsActive()) {
+            pos = odo.getPosition();
+            odo.update();
+
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) + 47+5*numSamp);
+            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+
+            targetX = sampX;
+            targetY = sampY - 5*numSamp;
+
+            axial = 0;
+            yaw = 0;
+            lateral = speed2;
+
+            move();
+        }
+        off();
+    }
+
+    //     from last block drop off, go to the spot where the human player place the specimen, pick up the specimen
     public void pickupSpecial(){
         odo.update();
 
@@ -712,6 +641,30 @@ public class PinpointAuto2 extends LinearOpMode {
         String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", vel.getX(DistanceUnit.MM), vel.getY(DistanceUnit.MM), vel.getHeading(AngleUnit.DEGREES));
         telemetry.addData("Velocity", velocity);
 
+        axial = 0.2;
+        lateral = 0;
+        move();
+        sleep(200);
+        axial = 0;
+        lateral = 0;
+        move();
+
+//        align with specimen
+        while (pos.getY(DistanceUnit.INCH) < pickupY && opModeIsActive()) {
+            targetX = dropX+1;
+            targetY = pickupY;
+
+            pos = odo.getPosition();
+            odo.update();
+
+            double dist = Math.abs(pos.getY(DistanceUnit.INCH) + pickupY);
+            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+
+            axial = 0;
+            lateral = -speed2;
+
+            move();
+        }
         off();
 
 //        go to specimen at wall
@@ -730,7 +683,7 @@ public class PinpointAuto2 extends LinearOpMode {
 
             move();
         }
-//        off();
+        off();
         sleep(100);
 
 //      grab specimen and bring it to place
@@ -835,16 +788,6 @@ public class PinpointAuto2 extends LinearOpMode {
 //        claw = hardwareMap.get(CRServo.class, "clw");
         top_arm = hardwareMap.get(Servo.class, "tam");
         outtake_claw = hardwareMap.get(Servo.class, "ocw");
-        barl = hardwareMap.get(Servo.class, "brl");
-        barr = hardwareMap.get(Servo.class, "brr");
-
-
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        leftRightHinge = hardwareMap.get(Servo.class, "hlr");
-        telemetry.setMsTransmissionInterval(500);
-
-        limelight.pipelineSwitch(1);
-        limelight.start();
 
 
         lift_left.setDirection(DcMotor.Direction.REVERSE);
@@ -942,8 +885,8 @@ public class PinpointAuto2 extends LinearOpMode {
             // Run until the end of the match (driver presses STOP)
 
             if (moveStuff) {
-                top_arm.setPosition(0.8);
-                outtake_claw.setPosition(.45);
+                top_arm.setPosition(OUTTAKE_ARM_FRONT);
+                outtake_claw.setPosition(CLAW_CLOSED);
                 moveStuff = false;
             }
 
@@ -984,12 +927,13 @@ public class PinpointAuto2 extends LinearOpMode {
                 blockNum += 1;
 
                 // go to first sample and drop it off at human player
-                toSamp();
+                subToSamp();
                 dropOff();
                 numSamp += 1;
+                sampX -= 4;
 
                 // go to second sample and drop it off at human player
-                toSamp();
+                dropToSamp();
                 dropOff();
                 numSamp += 1; // update that now you need to go to the next sample
 
@@ -1007,7 +951,8 @@ public class PinpointAuto2 extends LinearOpMode {
                 // place third specimen
                 pickupY += 14;
                 pickupX -= 6;
-//                pickupX -= 5;
+                placeX -= 1;
+
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
@@ -1016,7 +961,7 @@ public class PinpointAuto2 extends LinearOpMode {
 
                 // place fourth specimen
                 pickup(); // go from submersible to specimen pick up area
-//                placeSpecimen(); // place the fourth specimen
+                placeSpecimen(); // place the fourth specimen
 //                blockNum += 2.5; // update how many blocks for alignment
 //
 //                // place fifth specimen

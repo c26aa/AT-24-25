@@ -66,7 +66,7 @@ For support, contact tech@gobilda.com
 -Ethan Doak
  */
 
-@Autonomous(name = "specimen auto", group = "Linear OpMode")
+@Autonomous(name = "specimen auto 3", group = "Linear OpMode")
 //@Disabled
 
 public class PinpointAuto extends LinearOpMode {
@@ -79,7 +79,7 @@ public class PinpointAuto extends LinearOpMode {
     private double currentPosition1 = 0.3; // Start the servo at the middle position
     private int blockNum = 0;
     private int numSamp = 1;
-    private int sampX = 38;
+    private int sampX = 41;
     private int sampY = -48;
     private int laneX = 22;
     private int laneY = -33;
@@ -244,9 +244,9 @@ public class PinpointAuto extends LinearOpMode {
 
     public void pickupClawAction(){
         sleep(300);
-        outtake_claw.setPosition(.45);
+        outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
         sleep(300);
-        top_arm.setPosition(0.8);
+        top_arm.setPosition(OUTTAKE_ARM_FRONT);
     }
 
 
@@ -276,9 +276,8 @@ public class PinpointAuto extends LinearOpMode {
             useLiftEncoder = true;
             lift_target = 490;
             if (blockNum > 0){
-                lift_target = 430;
+                lift_target = 420;
             } if (blockNum == 1){
-//                lift_target = 420;
                 lift_target = 420;
             }
 
@@ -301,8 +300,6 @@ public class PinpointAuto extends LinearOpMode {
 //            uncomment once lift is ready
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.95);
-            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                lift_left.setPower(-.8);
             } else {
                 lift_left.setPower(0);
             }
@@ -320,10 +317,6 @@ public class PinpointAuto extends LinearOpMode {
             }
 
             move();
-        } while (pos.getX(DistanceUnit.INCH) > placeX+2+distOff*blockNum && opModeIsActive()){
-            axial = -0.2;
-            lateral= 0;
-            move();
         }
 
         // Stop the drive motors
@@ -340,20 +333,18 @@ public class PinpointAuto extends LinearOpMode {
             if (blockNum > 0){
                 lift_target = 630;
             } else {
-                lift_target = 650;
+                lift_target = 660;
             }
         }
 
         //  pull claw back and lift scissor lift to place sample
-        top_arm.setPosition(.2);
+        top_arm.setPosition(OUTTAKE_ARM_BUCKET);
 //        uncomment once lift is ready
         while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
             telemetry.update();
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.8);
-            } else if (lift_target < lift_left.getCurrentPosition() - 15) {
-                lift_left.setPower(-.5);
             } else {
                 lift_left.setPower(0);
             }
@@ -364,8 +355,9 @@ public class PinpointAuto extends LinearOpMode {
 
         // Adjust the outtake claw and top arm positions
         sleep(100);
-        outtake_claw.setPosition(.2);
-        top_arm.setPosition(.1);
+        outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
+        sleep(100);
+        top_arm.setPosition(OUTTAKE_ARM_BACK);
         lift_target = 0;
 
         //  Lower scissor lift
@@ -461,7 +453,7 @@ public class PinpointAuto extends LinearOpMode {
         // correct
         pos = odo.getPosition();
         odo.update();
-        while ((pos.getY(DistanceUnit.INCH) < -36 && opModeIsActive())){
+        while ((pos.getY(DistanceUnit.INCH) < -37 && opModeIsActive())){
             pos = odo.getPosition();
             odo.update();
 
@@ -912,8 +904,8 @@ public class PinpointAuto extends LinearOpMode {
             // Run until the end of the match (driver presses STOP)
 
             if (moveStuff) {
-                top_arm.setPosition(0.8);
-                outtake_claw.setPosition(.45);
+                top_arm.setPosition(OUTTAKE_ARM_FRONT);
+                outtake_claw.setPosition(CLAW_CLOSED);
                 moveStuff = false;
             }
 
@@ -957,6 +949,7 @@ public class PinpointAuto extends LinearOpMode {
                 subToSamp();
                 dropOff();
                 numSamp += 1;
+                sampX -= 4;
 
                 // go to second sample and drop it off at human player
                 dropToSamp();
@@ -977,7 +970,7 @@ public class PinpointAuto extends LinearOpMode {
                 // place third specimen
                 pickupY += 14;
                 pickupX -= 6;
-//                pickupX -= 5;
+//                placeX += 1;
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment

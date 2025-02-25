@@ -577,10 +577,10 @@ public class SampleAuto extends LinearOpMode {
         axial = -slowSpeed;
         lateral = 0;
         move();
-        if (blockNum < 3){
+        if (blockNum < 2){
             sleep(300);
         } else {
-            sleep(400);
+            sleep(450);
         }
         leftFrontDrive.setPower(0);
         leftBackDrive.setPower(0);
