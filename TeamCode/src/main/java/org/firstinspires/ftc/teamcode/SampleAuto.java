@@ -61,7 +61,7 @@ public class SampleAuto extends LinearOpMode {
     private double tolerance = 0.1;
     private double bucketX = 6.5;
     private int bucketY = 27;
-    private double pickupX = bucketX+8;
+    private double pickupX = bucketX+7.5;
     private double pickupY = 18.5;
     private int lift_top = 1320;
     private int lift_bottom = 0;
@@ -388,20 +388,19 @@ public class SampleAuto extends LinearOpMode {
         // pass thru
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
         new Thread(() -> {
-            sleep(100);
             top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
-        }).start();
-        new Thread(() -> {
-            sleep(400);
-            top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
+            //sleep(400);
             claw.setPosition(CLAW_CLOSED-0.05);
             bar_left.setPosition(0.65);
             bar_right.setPosition(0.51);
             left_right_hinge.setPosition(HINGE_MIDDLE);
             up_down_hinge.setPosition(WRIST_UP);
+            sleep(500);
+            top_arm.setPosition(OUTTAKE_ARM_FRONT+0.06);
             sleep(200);
         }).start();
-        double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
+
+        double inAmount = 0.16; // lower will be more in, don't make less than 0 or greater than 0.6
         double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
         double rightPos = RIGHT_SLIDES_IN + inAmount;
         slide_left.setPosition(leftPos);
@@ -412,7 +411,15 @@ public class SampleAuto extends LinearOpMode {
             outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
             sleep(500);
             claw.setPosition(CLAW_OPEN);
-//            top_arm.setPosition(OUTTAKE_ARM_BACK);
+            top_arm.setPosition(OUTTAKE_ARM_BACK);
+            new Thread(() -> {
+                sleep(800);
+                double inA = 0.35; // lower will be more in, don't make less than 0 or greater than 0.6
+                double lPos = LEFT_SLIDES_OUT - inA; // left slides out is actually the in position
+                double rPos = RIGHT_SLIDES_IN + inA;
+                slide_left.setPosition(lPos);
+                slide_right.setPosition(rPos);
+            }).start();
         }).start();
 
         passTime = runtime.milliseconds();
@@ -422,6 +429,7 @@ public class SampleAuto extends LinearOpMode {
             sleep(2900);
             clawMidPos();
         }).start();
+
     }
 
     // place the sample
@@ -578,7 +586,7 @@ public class SampleAuto extends LinearOpMode {
         top_arm.setPosition(OUTTAKE_ARM_BUCKET);
         sleep(1000);
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
-        sleep(100);
+        sleep(250);
         top_arm.setPosition(OUTTAKE_ARM_FRONT);
         sleep(1000);
 
