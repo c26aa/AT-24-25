@@ -145,7 +145,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
         while (opModeIsActive()) {
             if (!done){
-                top_arm.setPosition(OUTTAKE_ARM_FRONT);
+                top_arm.setPosition(OUTTAKE_ARM_BACK);
                 done = true;
             }
             double max;
@@ -275,8 +275,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad2.b) {//regular pick up
 //                bar_left.setPosition(0.383);
 //                bar_right.setPosition(0.767);
-                bar_left.setPosition(0.41);
-                bar_right.setPosition(0.74);
+                bar_left.setPosition(0.4);
+                bar_right.setPosition(0.75);
 //                left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_DOWN);
 
@@ -312,20 +312,19 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad2.x) {//handoff
                 outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                 new Thread(() -> {
-                    sleep(100);
                     top_arm.setPosition(OUTTAKE_ARM_BACK);//this line hasn't been tested, comment out if not working
-                }).start();
-                new Thread(() -> {
-                    sleep(400);
-                    top_arm.setPosition(OUTTAKE_ARM_FRONT-0.06);
+                    //sleep(400);
                     claw.setPosition(CLAW_CLOSED-0.05);
                     bar_left.setPosition(0.65);
                     bar_right.setPosition(0.51);
                     left_right_hinge.setPosition(HINGE_MIDDLE);
                     up_down_hinge.setPosition(WRIST_UP);
+                    sleep(400);
+                    top_arm.setPosition(OUTTAKE_ARM_FRONT+0.06);
                     sleep(200);
                 }).start();
-                double inAmount = 0.13; // lower will be more in, don't make less than 0 or greater than 0.6
+
+                double inAmount = 0.16; // lower will be more in, don't make less than 0 or greater than 0.6
                 double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
                 double rightPos = RIGHT_SLIDES_IN + inAmount;
                 slide_left.setPosition(leftPos);
@@ -405,22 +404,25 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             if (gamepad1.right_bumper) {//close
                 outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
-
             }
             if (gamepad1.dpad_down) {//towards front/handoff
                 top_arm.setPosition(OUTTAKE_ARM_FRONT);
+                telemetry.addData("Top Arm Position", top_arm.getPosition());
+                telemetry.update();
             }
             if (gamepad1.dpad_up) {
                 top_arm.setPosition(OUTTAKE_ARM_BACK);// back side
-
+                telemetry.addData("Top Arm Position", top_arm.getPosition());
+                telemetry.update();
             }
             if (gamepad1.dpad_left) {
                 top_arm.setPosition(OUTTAKE_ARM_BUCKET);//for bucket
-
+                telemetry.addData("Top Arm Position", top_arm.getPosition());
+                telemetry.update();
             }
             if (gamepad1.a) {
                 useLiftEncoder = true;
-                lift_target = lift_left.getCurrentPosition() + 50; // Set the lift target
+                lift_target = lift_left.getCurrentPosition() + 100; // Set the lift target
 
                 // Open the claw after a short delay (if needed)
 
@@ -446,7 +448,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 }).start();
                 new Thread(() -> {
                     sleep(1000);
-                    top_arm.setPosition(0.8);
+                    top_arm.setPosition(OUTTAKE_ARM_FRONT);
                 }).start();
 
 
@@ -512,7 +514,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 //                        double cmx = leftRightHinge.getPosition()+gamepad2.right_stick_x*10;
 //                        double cmy = gamepad2.left_stick_y*10;
 
-                        double clawHingeDist = 1;
+                        double clawHingeDist = 150;
                         double hingeLeftRad = Math.toRadians(145);
                         double hingeRightRad = Math.toRadians(35);
                         double hingeAngleToServo = (HINGE_LEFT - HINGE_RIGHT) / (hingeLeftRad - hingeRightRad);
@@ -538,7 +540,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         telemetry.addData("mid servo position", newServoAngle);
                         telemetry.addData("mid servo real", leftRightHinge.getPosition());
 
-                        double projectedCamClawDist = clawHingeDist - 94 * Math.sin(Math.toRadians(55));
+                        double projectedCamClawDist = 94 * Math.sin(Math.toRadians(55));
                         //double changeY = cmy- projectedCamClawDist;
                         double changeY = cmy + projectedCamClawDist - clawHingeDist * Math.sin(Math.acos(newX / clawHingeDist));
 
@@ -549,7 +551,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         final double servoToAngleFactor = (servoMaxAngle - servoMinAngle) / (RIGHT_SLIDES_OUT - RIGHT_SLIDES_IN);
 
                         // Given values
-                        double slideRightPosition = slide_right.getPosition(); // Replace with actual servo position (0 to 1)
+                        double slideRightPosition = slide_right.getPosition();
 
                         // Convert servo position to radians
                         double theta = (slideRightPosition - RIGHT_SLIDES_IN) * servoToAngleFactor + servoMinAngle;
@@ -572,7 +574,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
                         telemetry.addData("calculated y",currentY);
                         telemetry.addData("intended slide position", next_posR);
-                        telemetry.addData("Right servo position",next_posR);
 
                         double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
                         double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
