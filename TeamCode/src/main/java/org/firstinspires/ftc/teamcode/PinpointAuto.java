@@ -274,11 +274,11 @@ public class PinpointAuto extends LinearOpMode {
         // Lift control logic
         if (liftPosition) {
             useLiftEncoder = true;
-            lift_target = 490;
+            lift_target = 475;
             if (blockNum > 0){
-                lift_target = 420;
+                lift_target = 410;
             } if (blockNum == 1){
-                lift_target = 420;
+                lift_target = 410;
             }
 
             liftPosition = false;
@@ -300,6 +300,8 @@ public class PinpointAuto extends LinearOpMode {
 //            uncomment once lift is ready
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.95);
+            } else if (lift_target < lift_left.getCurrentPosition()) {
+                lift_left.setPower(-0.6);
             } else {
                 lift_left.setPower(0);
             }

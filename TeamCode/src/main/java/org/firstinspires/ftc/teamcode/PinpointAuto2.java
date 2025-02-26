@@ -99,7 +99,7 @@ public class PinpointAuto2 extends LinearOpMode {
     private double heading = 0.0;
     //    private int distOff = 9;
     private int distOff = 2;
-    private double maxSpeed = 0.8;
+    private double maxSpeed = 0.82;
     private double speed = maxSpeed;
     private double maxSpeed2 = 0.95;
     private double speed2 = maxSpeed2; // max value is 0.89
@@ -274,11 +274,11 @@ public class PinpointAuto2 extends LinearOpMode {
         // Lift control logic
         if (liftPosition) {
             useLiftEncoder = true;
-            lift_target = 490;
+            lift_target = 475;
             if (blockNum > 0){
-                lift_target = 420;
+                lift_target = 410;
             } if (blockNum == 1){
-                lift_target = 420;
+                lift_target = 410;
             }
 
             liftPosition = false;
@@ -304,6 +304,8 @@ public class PinpointAuto2 extends LinearOpMode {
 //            uncomment once lift is ready
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.95);
+            } else if (lift_target < lift_left.getCurrentPosition()) {
+                lift_left.setPower(-0.6);
             } else {
                 lift_left.setPower(0);
             }
@@ -335,7 +337,7 @@ public class PinpointAuto2 extends LinearOpMode {
             useLiftEncoder = true;
 //            lift_target = 620;
             if (blockNum > 0){
-                lift_target = 630;
+                lift_target = 615;
             } else {
                 lift_target = 660;
             }
@@ -668,14 +670,14 @@ public class PinpointAuto2 extends LinearOpMode {
         off();
 
 //        go to specimen at wall
-        while (pos.getX(DistanceUnit.INCH) > pickupX+distOff*blockNum && opModeIsActive()) {
-            targetX = pickupX+distOff*blockNum;
+        while (pos.getX(DistanceUnit.INCH) > pickupX && opModeIsActive()) {
+            targetX = pickupX;
             targetY = pickupY;
 
             pos = odo.getPosition();
             odo.update();
 
-            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX+distOff*blockNum);
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX);
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             axial = -speed;
@@ -748,14 +750,14 @@ public class PinpointAuto2 extends LinearOpMode {
         }
         off();
 //        go to specimen at wall
-        while (pos.getX(DistanceUnit.INCH) > pickupX+distOff*blockNum && opModeIsActive()) {
-            targetX = pickupX+distOff*blockNum;
+        while (pos.getX(DistanceUnit.INCH) > pickupX && opModeIsActive()) {
+            targetX = pickupX;
             targetY = pickupY;
 
             pos = odo.getPosition();
             odo.update();
 
-            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX+distOff*blockNum);
+            double dist = Math.abs(pos.getX(DistanceUnit.INCH) - pickupX);
             speed = Math.min(Math.log(dist/4+logAdd), maxSpeed);
 
             axial = -speed;
@@ -930,7 +932,7 @@ public class PinpointAuto2 extends LinearOpMode {
                 subToSamp();
                 dropOff();
                 numSamp += 1;
-                sampX -= 4;
+                sampX -= 5;
 
                 // go to second sample and drop it off at human player
                 dropToSamp();
@@ -943,22 +945,23 @@ public class PinpointAuto2 extends LinearOpMode {
 
                 // place second specimen
 //                make this smaller or figure out why it didn't go to wall
-                pickupX += 6;
-//                pickupX += 4;
+//                first pickup
+                pickupX += 2;
                 pickupSpecial(); // go from drop off of last sample to specimen pick up area
                 placeSpecimen(); // place the second specimen
                 blockNum += 1; // update how many blocks for alignment
 
                 // place third specimen
+//                second pickup
                 pickupY += 14;
-                pickupX -= 6;
-                placeX -= 1;
+                pickupX -= 0;
+                placeX -= 4;
 
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
 
-                pickupX = -1;
+                pickupX += 1;
 
                 // place fourth specimen
                 pickup(); // go from submersible to specimen pick up area
