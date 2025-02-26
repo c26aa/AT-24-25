@@ -191,16 +191,21 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             //all gamepad 2 stuff
             // Servo control (unchanged) this sucks change this
             if (gamepad2.left_trigger > 0.1) {//closed positon
+                currentPosition = slide_left.getPosition();
+                currentPosition1 = slide_right.getPosition();
+
                 currentPosition += CHANGE_AMOUNT;
                 currentPosition = Math.min(Math.max(currentPosition, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);//makes sure its never above or below min and max value
                 slide_left.setPosition(currentPosition);
                 currentPosition1 -= CHANGE_AMOUNT;
                 currentPosition1 = Math.min(Math.max(currentPosition1, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
                 slide_right.setPosition(currentPosition1);
-
             }
 
             if (gamepad2.right_trigger > 0.1) {//
+                currentPosition = slide_left.getPosition();
+                currentPosition1 = slide_right.getPosition();
+
                 currentPosition -= CHANGE_AMOUNT;
                 currentPosition = Math.min(Math.max(currentPosition, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);//makes sure its never above or below min and max value
                 slide_left.setPosition(currentPosition);
@@ -288,27 +293,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_MIDDLE);
             }
-            // old pass thru
-//            if (gamepad2.x) {//handoff
-//                claw.setPosition(CLAW_CLOSED-0.02);
-//                outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
-//                bar_left.setPosition(0.65);
-//                bar_right.setPosition(0.51);
-//                left_right_hinge.setPosition(HINGE_MIDDLE);
-//                up_down_hinge.setPosition(0.0);
-//                top_arm.setPosition(OUTTAKE_ARM_FRONT-0.05);
-//                slide_left.setPosition(0.67);
-//                slide_right.setPosition(0.43);
-//                new Thread(() -> {
-//                    sleep(1000);
-//                    outtake_claw.setPosition(OUTTAKE_CLAW_CLOSED);
-//                    sleep(500);
-//                    claw.setPosition(CLAW_OPEN);
-//                    top_arm.setPosition(OUTTAKE_ARM_BACK);
-//                }).start();
-//            }
 
-            // BERMAN's PASS THRU IDEA
+            // PASS THRU
             if (gamepad2.x) {//handoff
                 outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                 new Thread(() -> {
@@ -337,7 +323,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     claw.setPosition(CLAW_OPEN);
                     top_arm.setPosition(OUTTAKE_ARM_BACK);
                     new Thread(() -> {
-                        sleep(800);
+                        sleep(400);
                         double inA = 0.35; // lower will be more in, don't make less than 0 or greater than 0.6
                         double lPos = LEFT_SLIDES_OUT - inA; // left slides out is actually the in position
                         double rPos = RIGHT_SLIDES_IN + inA;
@@ -358,11 +344,13 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             }
 
             if (gamepad2.left_stick_x < -0.2){
+                currentPosition = leftRightHinge.getPosition();
                 currentPosition += CHANGE_AMOUNT1;
                 currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
                 left_right_hinge.setPosition(currentPosition);
             }
             if (gamepad2.left_stick_x > 0.2){
+                currentPosition = leftRightHinge.getPosition();
                 currentPosition -= CHANGE_AMOUNT1;
                 currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
                 left_right_hinge.setPosition(currentPosition);
@@ -433,7 +421,10 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                     sleep(500); // Adjust this delay if necessary
                     top_arm.setPosition(OUTTAKE_ARM_BACK);
+                    sleep(200);
                 }).start();
+                useLiftEncoder = true;
+                lift_target = 0;
             }
             if (gamepad1.y) {
                 bar_left.setPosition(0.44);

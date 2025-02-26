@@ -942,6 +942,7 @@ public class PinpointAuto2 extends LinearOpMode {
 //                dropOff();
 
                 // place second specimen
+//                make this smaller or figure out why it didn't go to wall
                 pickupX += 6;
 //                pickupX += 4;
                 pickupSpecial(); // go from drop off of last sample to specimen pick up area
