@@ -343,19 +343,69 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
             }
 
-            if (gamepad2.left_stick_x < -0.2){
-                currentPosition = leftRightHinge.getPosition();
-                currentPosition += CHANGE_AMOUNT1;
-                currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
-                left_right_hinge.setPosition(currentPosition);
-            }
-            if (gamepad2.left_stick_x > 0.2){
-                currentPosition = leftRightHinge.getPosition();
-                currentPosition -= CHANGE_AMOUNT1;
-                currentPosition = Math.min(Math.max(currentPosition, HINGE_RIGHT), HINGE_LEFT);//makes sure its never above or below min and max value
-                left_right_hinge.setPosition(currentPosition);
+            double gp2ly = -gamepad2.left_stick_y;
+            double gp2lx = gamepad2.left_stick_x;
+            telemetry.addData("input x",gp2lx);
+            telemetry.addData("input y",gp2ly);
 
+            if (gp2lx*gp2lx+gp2ly*gp2ly < -0.2 || gp2lx*gp2lx+gp2ly*gp2ly > 0.2) {
+                double changeX = 3 * gp2lx;
+
+                telemetry.addData("X changes", changeX);
+
+                double clawHingeDist = 150;
+                double hingeLeftRad = Math.toRadians(145);
+                double hingeRightRad = Math.toRadians(35);
+                double hingeAngleToServo = (HINGE_LEFT - HINGE_RIGHT) / (hingeLeftRad - hingeRightRad);
+                double currentX = clawHingeDist*Math.cos((leftRightHinge.getPosition() - HINGE_RIGHT)/hingeAngleToServo + hingeRightRad);
+                double newX = Math.max(clawHingeDist * Math.cos(hingeLeftRad), Math.min(clawHingeDist * Math.cos(hingeRightRad), currentX+changeX));
+                double newServoAngle = (Math.acos(newX / clawHingeDist) - hingeRightRad) * hingeAngleToServo + HINGE_RIGHT;
+                double arm_pos = newServoAngle;
+
+                telemetry.addData("currentX", currentX);
+                telemetry.addData("newX", newX);
+                telemetry.addData("newServoAngle", newServoAngle);
+                double changeY = 5 * gp2ly - 150 * Math.sin(Math.acos(newX / clawHingeDist)) + 150 * Math.sin(Math.acos(currentX / clawHingeDist));
+                telemetry.addData("y change", changeY);
+                final double servoMaxAngle = Math.toRadians(180);
+                final double servoMinAngle = Math.toRadians(77);
+                final double servoToAngleFactor = (servoMaxAngle - servoMinAngle) / (RIGHT_SLIDES_OUT - RIGHT_SLIDES_IN);
+
+                // Given values
+                double slideRightPosition = slide_right.getPosition();
+
+                // Convert servo position to radians
+                double theta = (slideRightPosition - RIGHT_SLIDES_IN) * servoToAngleFactor + servoMinAngle;
+
+                // Convert radians to current Y position
+                double currentY = 242 * Math.cos(Math.asin(171 * Math.sin(theta) / 242)) - 171 * Math.cos(theta);
+
+                // Compute new Y position
+                double newFinal = currentY + changeY;
+
+                // Compute new angle in radians
+                double safeAcosInput = Math.max(-1, Math.min(1, (242 * 242 - newFinal * newFinal - 171 * 171) / (342 * newFinal)));
+                double newAngle = Math.acos(safeAcosInput);
+                //telemetry.addData("Absolute Servo Angle", Math.toDegrees(newAngle));
+
+                leftRightHinge.setPosition(arm_pos);
+
+                // Convert new angle back to servo position
+                double next_posR = (newAngle - servoMinAngle) / servoToAngleFactor + RIGHT_SLIDES_IN;
+                double servoChange = next_posR - slideRightPosition;
+                double next_posL = slide_left.getPosition() - servoChange;
+
+//                telemetry.addData("calculated y",currentY);
+//                telemetry.addData("intended slide position", next_posR);
+
+                double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
+                double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
+                if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1) {
+                    slide_left.setPosition(new_posL);
+                    slide_right.setPosition(new_posR);
+                }
             }
+
 
 
             int lift_encoder_value = lift_left.getCurrentPosition();
