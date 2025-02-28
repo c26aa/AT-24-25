@@ -486,7 +486,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 new Thread(() -> {
                     sleep(300);
                     useLiftEncoder = true;
-                    lift_target = 460;
+                    lift_target = 440;
                 }).start();
                 new Thread(() -> {
                     sleep(1000);
