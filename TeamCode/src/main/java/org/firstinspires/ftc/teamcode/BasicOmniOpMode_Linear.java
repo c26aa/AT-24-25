@@ -310,7 +310,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     sleep(200);
                 }).start();
 
-                double inAmount = 0.16; // lower will be more in, don't make less than 0 or greater than 0.6
+                double inAmount = 0.18; // lower will be more in, don't make less than 0 or greater than 0.6
                 double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
                 double rightPos = RIGHT_SLIDES_IN + inAmount;
                 slide_left.setPosition(leftPos);
