@@ -81,7 +81,7 @@ public class PinpointAuto2 extends LinearOpMode {
     private int numSamp = 1;
     private int sampX = 41;
     private int sampY = -48;
-    private int laneX = 23;
+    private int laneX = 25;
     private int laneY = -32;
     //    private  int dropX = 18;
     private  int dropX = 21;
@@ -103,6 +103,7 @@ public class PinpointAuto2 extends LinearOpMode {
     private double speed = maxSpeed;
     private double maxSpeed2 = 0.95;
     private double speed2 = maxSpeed2; // max value is 0.89
+    private double headingCorrectSpeed = 0.25;
     private double targetX = 0;
     private double targetY = 0;
     private double logAdd = 1.01;
@@ -221,16 +222,16 @@ public class PinpointAuto2 extends LinearOpMode {
 
 //            if it's rotating too much than reverse heading greater than less than
             if (heading > 0.05){
-                leftFrontDrive.setPower(0.165);
-                leftBackDrive.setPower(0.165);
-                rightBackDrive.setPower(-0.165);
-                rightFrontDrive.setPower(-0.165);
+                leftFrontDrive.setPower(headingCorrectSpeed);
+                leftBackDrive.setPower(headingCorrectSpeed);
+                rightBackDrive.setPower(-headingCorrectSpeed);
+                rightFrontDrive.setPower(-headingCorrectSpeed);
             }
             if (heading < -0.05){
-                leftFrontDrive.setPower(-0.165);
-                leftBackDrive.setPower(-0.165);
-                rightBackDrive.setPower(0.165);
-                rightFrontDrive.setPower(0.165);
+                leftFrontDrive.setPower(-headingCorrectSpeed);
+                leftBackDrive.setPower(-headingCorrectSpeed);
+                rightBackDrive.setPower(headingCorrectSpeed);
+                rightFrontDrive.setPower(headingCorrectSpeed);
             }
 
         }
@@ -274,11 +275,11 @@ public class PinpointAuto2 extends LinearOpMode {
         // Lift control logic
         if (liftPosition) {
             useLiftEncoder = true;
-            lift_target = 475;
+            lift_target = 460;
             if (blockNum > 0){
-                lift_target = 410;
+                lift_target = 402;
             } if (blockNum == 1){
-                lift_target = 410;
+                lift_target = 402;
             }
 
             liftPosition = false;
@@ -286,6 +287,7 @@ public class PinpointAuto2 extends LinearOpMode {
 
         // Drive motor control logic
         while (pos.getX(DistanceUnit.INCH) < placeX+distOff*blockNum && opModeIsActive()) {
+//            top_arm.setPosition(OUTTAKE_ARM_FRONT);
             pos = odo.getPosition();
             odo.update();
 
@@ -304,9 +306,11 @@ public class PinpointAuto2 extends LinearOpMode {
 //            uncomment once lift is ready
             if (lift_target > lift_left.getCurrentPosition() + 15) {
                 lift_left.setPower(.95);
-            } else if (lift_target < lift_left.getCurrentPosition()) {
-                lift_left.setPower(-0.6);
-            } else {
+            }
+//            else if (lift_target < lift_left.getCurrentPosition()) {
+//                lift_left.setPower(-0.6);
+//            }
+            else {
                 lift_left.setPower(0);
             }
             lift_right.setPower(lift_left.getPower());
@@ -337,16 +341,16 @@ public class PinpointAuto2 extends LinearOpMode {
             useLiftEncoder = true;
 //            lift_target = 620;
             if (blockNum > 0){
-                lift_target = 615;
-            } else {
                 lift_target = 660;
+            } else {
+                lift_target = 720;
             }
         }
 
         //  pull claw back and lift scissor lift to place sample
-        top_arm.setPosition(OUTTAKE_ARM_BUCKET);
 //        uncomment once lift is ready
         while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
+//            top_arm.setPosition(OUTTAKE_ARM_FRONT);
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
             telemetry.update();
             if (lift_target > lift_left.getCurrentPosition() + 15) {
@@ -605,19 +609,19 @@ public class PinpointAuto2 extends LinearOpMode {
 //        off();
 
         //  drive behind block
-        while (pos.getY(DistanceUnit.INCH) > sampY - 5.5*numSamp && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > sampY - 4*numSamp && opModeIsActive()) {
             pos = odo.getPosition();
             odo.update();
 
-            double dist = Math.abs(pos.getY(DistanceUnit.INCH) + 47+5*numSamp);
-            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
+//            double dist = Math.abs(pos.getY(DistanceUnit.INCH) + 47+5*numSamp);
+//            speed2 = Math.min(Math.log(dist/4+logAdd), maxSpeed2);
 
             targetX = sampX;
             targetY = sampY - 5*numSamp;
 
             axial = 0;
             yaw = 0;
-            lateral = speed2;
+            lateral = maxSpeed;
 
             move();
         }
@@ -922,8 +926,8 @@ public class PinpointAuto2 extends LinearOpMode {
                 // fluctuationTest();
                 bar_left.setPosition(0.61);
                 bar_right.setPosition(0.55);
-                left_right_hinge.setPosition(HINGE_LEFT);
-                up_down_hinge.setPosition(0.2);
+                left_right_hinge.setPosition(HINGE_RIGHT);
+                up_down_hinge.setPosition(WRIST_UP);
                 // place preloaded specimen
                 placeSpecimen();
                 blockNum += 1;

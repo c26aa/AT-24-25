@@ -401,15 +401,11 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
                 double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
                 if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1) {
-                    telemetry.addData("slide position", new_posL);
-                    telemetry.addData("slide position", new_posR);
                     slide_left.setPosition(new_posL);
                     slide_right.setPosition(new_posR);
-                } else {
-                    telemetry.addData("slide position wrong", new_posL);
-                    telemetry.addData("slide position wrong", new_posR);
                 }
             }
+
 
 
             int lift_encoder_value = lift_left.getCurrentPosition();
@@ -475,10 +471,11 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                     sleep(500); // Adjust this delay if necessary
                     top_arm.setPosition(OUTTAKE_ARM_BACK);
-                    sleep(200);
+                    sleep(3000);
+                    useLiftEncoder = true;
+                    lift_target = 0;
                 }).start();
-                useLiftEncoder = true;
-                lift_target = 0;
+
             }
             if (gamepad1.y) {
                 bar_left.setPosition(0.44);
@@ -533,12 +530,14 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 } else {
                     limelight.pipelineSwitch(1);
                 }
+                new Thread(() -> {
+                    leftRightHinge.setPosition(mid_pos);
+                    barl.setPosition(blm);
+                    barr.setPosition(brm);
+                    up_down_hinge.setPosition(WRIST_MIDDLE);
+                    sleep(400);
+                }).start();
 
-                leftRightHinge.setPosition(mid_pos);
-                barl.setPosition(blm);
-                barr.setPosition(brm);
-                up_down_hinge.setPosition(WRIST_MIDDLE);
-                sleep(400);
 
                 status = limelight.getStatus();
                 telemetry.addData("Name", "%s", status.getName());
@@ -567,13 +566,17 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         double newServoAngle = (Math.acos(newX / clawHingeDist) - hingeRightRad) * hingeAngleToServo + HINGE_RIGHT;
                         double arm_pos = newServoAngle;
 
-                        leftRightHinge.setPosition(arm_pos);
-                        // arm down
-                        sleep(200);
 
-                        claw.setPosition(CLAW_OPEN);
-                        bar_left.setPosition(0.44);
-                        bar_right.setPosition(0.71);
+                        new Thread(() -> {
+                            leftRightHinge.setPosition(arm_pos);
+                            // arm down
+                            sleep(200);
+
+                            claw.setPosition(CLAW_OPEN);
+                            bar_left.setPosition(0.44);
+                            bar_right.setPosition(0.71);
+                        }).start();
+
 
 // right slides in (lower) is in
 // left slides out (higher) is in
@@ -585,7 +588,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                         telemetry.addData("mid servo position", newServoAngle);
                         telemetry.addData("mid servo real", leftRightHinge.getPosition());
 
-                        double projectedCamClawDist = 88 * Math.sin(Math.toRadians(55));
+                        double projectedCamClawDist = 94 * Math.sin(Math.toRadians(55));
                         //double changeY = cmy- projectedCamClawDist;
                         double changeY = cmy + projectedCamClawDist - clawHingeDist * Math.sin(Math.acos(newX / clawHingeDist));
 
