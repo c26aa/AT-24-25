@@ -81,7 +81,7 @@ public class PinpointAuto2 extends LinearOpMode {
     private int numSamp = 1;
     private int sampX = 41;
     private int sampY = -48;
-    private int laneX = 25;
+    private int laneX = 27;
     private int laneY = -32;
     //    private  int dropX = 18;
     private  int dropX = 21;
@@ -277,9 +277,9 @@ public class PinpointAuto2 extends LinearOpMode {
             useLiftEncoder = true;
             lift_target = 460;
             if (blockNum > 0){
-                lift_target = 405;
+                lift_target = 402;
             } if (blockNum == 1){
-                lift_target = 405;
+                lift_target = 402;
             }
 
             liftPosition = false;
@@ -328,7 +328,15 @@ public class PinpointAuto2 extends LinearOpMode {
         off();
 
         // Wait for .2 seconds
-        sleep(200);
+        axial = 0.25;
+        lateral = 0;
+        move();
+        sleep(300);
+        leftFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+
         // Update the lift target after driving
         if (!liftPosition) {
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
@@ -336,20 +344,20 @@ public class PinpointAuto2 extends LinearOpMode {
             useLiftEncoder = true;
 //            lift_target = 620;
             if (blockNum > 0){
-                lift_target = 760;
+                lift_target = 800;
             } else {
-                lift_target = 830;
+                lift_target = 860;
             }
         }
 
         //  pull claw back and lift scissor lift to place sample
-        top_arm.setPosition(OUTTAKE_ARM_BUCKET);
+        top_arm.setPosition(OUTTAKE_ARM_BACK);
 //        uncomment once lift is ready
         while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
             telemetry.update();
             if (lift_target > lift_left.getCurrentPosition() + 15) {
-                lift_left.setPower(.8);
+                lift_left.setPower(.95);
             } else {
                 lift_left.setPower(0);
             }
@@ -489,7 +497,7 @@ public class PinpointAuto2 extends LinearOpMode {
         off();
 
         //    go directly behind a block
-        while (pos.getY(DistanceUnit.INCH) > sampY && opModeIsActive()) {
+        while (pos.getY(DistanceUnit.INCH) > sampY || pos.getY(DistanceUnit.INCH) < sampY -1 && opModeIsActive()) {
             pos = odo.getPosition();
             odo.update();
 
@@ -505,6 +513,9 @@ public class PinpointAuto2 extends LinearOpMode {
 
             axial = 0;
             lateral = speed2;
+            if (pos.getY(DistanceUnit.INCH) < sampY){
+                lateral = -0.5;
+            }
 
             if (pos.getX(DistanceUnit.INCH) < targetX){
                 axial = -0.02;
@@ -742,7 +753,7 @@ public class PinpointAuto2 extends LinearOpMode {
             targetX = 20;
             targetY = placementOffset*blockNum;
 
-            axial = -0.2;
+            axial = -0.1;
             lateral = speed2;
 
             move();
@@ -954,14 +965,14 @@ public class PinpointAuto2 extends LinearOpMode {
 //                second pickup
                 pickupY += 14;
                 pickupX -= 2;
-                placeX -= 4;
+                placeX -= 3;
 
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
 
-                pickupX -= 0;
-                placeX += 2;
+                pickupX += 1.5;
+                placeX += 0;
 
                 // place fourth specimen
                 pickup(); // go from submersible to specimen pick up area
