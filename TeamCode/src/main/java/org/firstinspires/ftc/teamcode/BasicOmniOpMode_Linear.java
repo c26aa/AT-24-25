@@ -471,7 +471,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
                     sleep(500); // Adjust this delay if necessary
                     top_arm.setPosition(OUTTAKE_ARM_BACK);
-                    sleep(3000);
+                    sleep(1000);
                     useLiftEncoder = true;
                     lift_target = 0;
                 }).start();
@@ -486,7 +486,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 new Thread(() -> {
                     sleep(300);
                     useLiftEncoder = true;
-                    lift_target = 415;
+                    lift_target = 460;
                 }).start();
                 new Thread(() -> {
                     sleep(1000);
