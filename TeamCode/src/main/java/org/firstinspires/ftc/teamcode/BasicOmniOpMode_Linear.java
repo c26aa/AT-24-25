@@ -522,7 +522,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
 //            if sample is picked up perfectly when directly under camera then:
 //
-
             //limelight code
             if (gamepad2.right_stick_x > 0.2 || gamepad2.right_stick_x < -0.2) {
                 if (gamepad2.right_stick_x > 0.2) {
