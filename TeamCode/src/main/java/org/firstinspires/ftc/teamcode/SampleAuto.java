@@ -589,7 +589,7 @@ public class SampleAuto extends LinearOpMode {
 
         sleep(100);
         top_arm.setPosition(OUTTAKE_ARM_BUCKET);
-        sleep(800);
+        sleep(400);
         outtake_claw.setPosition(OUTTAKE_CLAW_OPEN);
         sleep(250);
         top_arm.setPosition(OUTTAKE_ARM_FRONT);
