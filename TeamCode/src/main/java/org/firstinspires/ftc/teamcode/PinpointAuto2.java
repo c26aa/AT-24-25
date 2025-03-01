@@ -346,7 +346,7 @@ public class PinpointAuto2 extends LinearOpMode {
             if (blockNum > 0){
                 lift_target = 800;
             } else {
-                lift_target = 860;
+                lift_target = 830;
             }
         }
 

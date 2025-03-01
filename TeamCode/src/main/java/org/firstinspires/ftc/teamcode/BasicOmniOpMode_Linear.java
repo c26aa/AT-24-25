@@ -226,7 +226,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     lift_target = 470;
                     // Move lift up using encoders
                 } else if (gamepad2.dpad_left) {
-                    lift_target = 1400;
+                    lift_target = 1410;
                     top_arm.setPosition(OUTTAKE_ARM_BUCKET);
                     // Move lift down using encoders
                 }
@@ -238,7 +238,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 } else {
                     lift_left.setPower(0);
                 }
-            } else if (gamepad2.dpad_up && lift_left.getCurrentPosition() < 1400) {//scissor lift
+            } else if (gamepad2.dpad_up && lift_left.getCurrentPosition() < 1410) {//scissor lift
                 lift_left.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 telemetry.addLine("Switched to manual control mode.");
                 lift_left.setPower(SCISSORLIFT_POWER);
@@ -280,8 +280,8 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             if (gamepad2.b) {//regular pick up
 //                bar_left.setPosition(0.383);
 //                bar_right.setPosition(0.767);
-                bar_left.setPosition(0.41);
-                bar_right.setPosition(0.74);
+                bar_left.setPosition(0.405);
+                bar_right.setPosition(0.7405);
 //                left_right_hinge.setPosition(HINGE_MIDDLE);
                 up_down_hinge.setPosition(WRIST_DOWN);
 
