@@ -128,8 +128,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
 
         telemetry.addData(">", "Robot Ready.  Press Play.");
         telemetry.update();
-        LLStatus status = limelight.getStatus();
-        LLResult result = limelight.getLatestResult();
 
 
         telemetry.addData("Status", "Initialized"); // print to control hub
@@ -535,118 +533,117 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                     barr.setPosition(brm);
                     up_down_hinge.setPosition(WRIST_MIDDLE);
                     sleep(400);
-                }).start();
+                    LLStatus status = limelight.getStatus();
+                    LLResult result = limelight.getLatestResult();
 
 
-                status = limelight.getStatus();
-                telemetry.addData("Name", "%s", status.getName());
-                telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d", status.getTemp(), status.getCpu(), (int) status.getFps());
-                telemetry.addData("Pipeline", "Index: %d, Type: %s", status.getPipelineIndex(), status.getPipelineType());
-
-                result = limelight.getLatestResult();
+                    telemetry.addData("Name", "%s", status.getName());
+                    telemetry.addData("LL", "Temp: %.1fC, CPU: %.1f%%, FPS: %d", status.getTemp(), status.getCpu(), (int) status.getFps());
+                    telemetry.addData("Pipeline", "Index: %d, Type: %s", status.getPipelineIndex(), status.getPipelineType());
 
 
-                if (result != null) {
-                    if (result.isValid()) {
-                        telemetry.addData("tx", result.getTx());
-                        telemetry.addData("ty", result.getTy());
+                    if (result != null) {
+                        if (result.isValid()) {
+                            telemetry.addData("tx", result.getTx());
+                            telemetry.addData("ty", result.getTy());
 
-                        double camHeight = 220;
-                        double cmx = camHeight * Math.tan(Math.toRadians(result.getTx()));
-                        double cmy = camHeight * Math.tan(Math.toRadians(result.getTy()));
-//                        double cmx = leftRightHinge.getPosition()+gamepad2.right_stick_x*10;
-//                        double cmy = gamepad2.left_stick_y*10;
+                            double camHeight = 220;
+                            double cmx = camHeight * Math.tan(Math.toRadians(result.getTx()));
+                            double cmy = camHeight * Math.tan(Math.toRadians(result.getTy()));
+    //                        double cmx = leftRightHinge.getPosition()+gamepad2.right_stick_x*10;
+    //                        double cmy = gamepad2.left_stick_y*10;
 
-                        double clawHingeDist = 150;
-                        double hingeLeftRad = Math.toRadians(145);
-                        double hingeRightRad = Math.toRadians(35);
-                        double hingeAngleToServo = (HINGE_LEFT - HINGE_RIGHT) / (hingeLeftRad - hingeRightRad);
-                        double newX = Math.max(clawHingeDist * Math.cos(hingeLeftRad), Math.min(clawHingeDist * Math.cos(hingeRightRad), cmx));
-                        double newServoAngle = (Math.acos(newX / clawHingeDist) - hingeRightRad) * hingeAngleToServo + HINGE_RIGHT;
-                        double arm_pos = newServoAngle;
-
-
-                        new Thread(() -> {
-                            leftRightHinge.setPosition(arm_pos);
-                            // arm down
-                            sleep(200);
-
-                            claw.setPosition(CLAW_OPEN);
-                            bar_left.setPosition(0.44);
-                            bar_right.setPosition(0.71);
-                        }).start();
+                            double clawHingeDist = 150;
+                            double hingeLeftRad = Math.toRadians(145);
+                            double hingeRightRad = Math.toRadians(35);
+                            double hingeAngleToServo = (HINGE_LEFT - HINGE_RIGHT) / (hingeLeftRad - hingeRightRad);
+                            double newX = Math.max(clawHingeDist * Math.cos(hingeLeftRad), Math.min(clawHingeDist * Math.cos(hingeRightRad), cmx));
+                            double newServoAngle = (Math.acos(newX / clawHingeDist) - hingeRightRad) * hingeAngleToServo + HINGE_RIGHT;
+                            double arm_pos = newServoAngle;
 
 
-// right slides in (lower) is in
-// left slides out (higher) is in
+                            new Thread(() -> {
+                                leftRightHinge.setPosition(arm_pos);
+                                // arm down
+                                sleep(200);
 
-                        telemetry.addData("dist y", cmy);
-                        telemetry.addData("distx", cmx);
-                        telemetry.addData("newX", newX);
-                        telemetry.addData("mid servo angle", Math.acos(newX / clawHingeDist));
-                        telemetry.addData("mid servo position", newServoAngle);
-                        telemetry.addData("mid servo real", leftRightHinge.getPosition());
+                                claw.setPosition(CLAW_OPEN);
+                                bar_left.setPosition(0.44);
+                                bar_right.setPosition(0.71);
+                            }).start();
 
-                        double projectedCamClawDist = 94 * Math.sin(Math.toRadians(55));
-                        //double changeY = cmy- projectedCamClawDist;
-                        double changeY = cmy + projectedCamClawDist - clawHingeDist * Math.sin(Math.acos(newX / clawHingeDist));
 
-                        telemetry.addData("desired change y", changeY);
+    // right slides in (lower) is in
+    // left slides out (higher) is in
 
-                        final double servoMaxAngle = Math.toRadians(180);
-                        final double servoMinAngle = Math.toRadians(77);
-                        final double servoToAngleFactor = (servoMaxAngle - servoMinAngle) / (RIGHT_SLIDES_OUT - RIGHT_SLIDES_IN);
+                            telemetry.addData("dist y", cmy);
+                            telemetry.addData("distx", cmx);
+                            telemetry.addData("newX", newX);
+                            telemetry.addData("mid servo angle", Math.acos(newX / clawHingeDist));
+                            telemetry.addData("mid servo position", newServoAngle);
+                            telemetry.addData("mid servo real", leftRightHinge.getPosition());
 
-                        // Given values
-                        double slideRightPosition = slide_right.getPosition();
+                            double projectedCamClawDist = 94 * Math.sin(Math.toRadians(55));
+                            //double changeY = cmy- projectedCamClawDist;
+                            double changeY = cmy + projectedCamClawDist - clawHingeDist * Math.sin(Math.acos(newX / clawHingeDist));
 
-                        // Convert servo position to radians
-                        double theta = (slideRightPosition - RIGHT_SLIDES_IN) * servoToAngleFactor + servoMinAngle;
+                            telemetry.addData("desired change y", changeY);
 
-                        // Convert radians to current Y position
-                        double currentY = 242 * Math.cos(Math.asin(171 * Math.sin(theta) / 242)) - 171 * Math.cos(theta);
+                            final double servoMaxAngle = Math.toRadians(180);
+                            final double servoMinAngle = Math.toRadians(77);
+                            final double servoToAngleFactor = (servoMaxAngle - servoMinAngle) / (RIGHT_SLIDES_OUT - RIGHT_SLIDES_IN);
 
-                        // Compute new Y position
-                        double newFinal = currentY + changeY;
+                            // Given values
+                            double slideRightPosition = slide_right.getPosition();
 
-                        // Compute new angle in radians
-                        double safeAcosInput = Math.max(-1, Math.min(1, (242 * 242 - newFinal * newFinal - 171 * 171) / (342 * newFinal)));
-                        double newAngle = Math.acos(safeAcosInput);
-                        telemetry.addData("Absolute Servo Angle", Math.toDegrees(newAngle));
+                            // Convert servo position to radians
+                            double theta = (slideRightPosition - RIGHT_SLIDES_IN) * servoToAngleFactor + servoMinAngle;
 
-                        // Convert new angle back to servo position
-                        double next_posR = (newAngle - servoMinAngle) / servoToAngleFactor + RIGHT_SLIDES_IN;
-                        double servoChange = next_posR - slideRightPosition;
-                        double next_posL = slide_left.getPosition() - servoChange;
+                            // Convert radians to current Y position
+                            double currentY = 242 * Math.cos(Math.asin(171 * Math.sin(theta) / 242)) - 171 * Math.cos(theta);
 
-                        telemetry.addData("calculated y",currentY);
-                        telemetry.addData("intended slide position", next_posR);
+                            // Compute new Y position
+                            double newFinal = currentY + changeY;
 
-                        double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
-                        double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
+                            // Compute new angle in radians
+                            double safeAcosInput = Math.max(-1, Math.min(1, (242 * 242 - newFinal * newFinal - 171 * 171) / (342 * newFinal)));
+                            double newAngle = Math.acos(safeAcosInput);
+                            telemetry.addData("Absolute Servo Angle", Math.toDegrees(newAngle));
 
-// double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
-// double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
-// double rightPos = RIGHT_SLIDES_IN + inAmount;
-// slide_left.setPosition(leftPos);
-// slide_right.setPosition(rightPos);
-                        if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1) {
-                            telemetry.addData("slide position", new_posL);
-                            telemetry.addData("slide position", new_posR);
-                            slide_left.setPosition(new_posL);
-                            slide_right.setPosition(new_posR);
-                        } else {
-                            telemetry.addData("slide position wrong", new_posL);
-                            telemetry.addData("slide position wrong", new_posR);
+                            // Convert new angle back to servo position
+                            double next_posR = (newAngle - servoMinAngle) / servoToAngleFactor + RIGHT_SLIDES_IN;
+                            double servoChange = next_posR - slideRightPosition;
+                            double next_posL = slide_left.getPosition() - servoChange;
+
+                            telemetry.addData("calculated y",currentY);
+                            telemetry.addData("intended slide position", next_posR);
+
+                            double new_posL = Math.min(Math.max(next_posL, LEFT_SLIDES_IN), LEFT_SLIDES_OUT);
+                            double new_posR = Math.min(Math.max(next_posR, RIGHT_SLIDES_IN), RIGHT_SLIDES_OUT);
+
+    // double inAmount = 0.15; // lower will be more in, don't make less than 0 or greater than 0.6
+    // double leftPos = LEFT_SLIDES_OUT - inAmount; // left slides out is actually the in position
+    // double rightPos = RIGHT_SLIDES_IN + inAmount;
+    // slide_left.setPosition(leftPos);
+    // slide_right.setPosition(rightPos);
+                            if (new_posL > 0 && new_posR > 0 && new_posL < 1 && new_posR < 1) {
+                                telemetry.addData("slide position", new_posL);
+                                telemetry.addData("slide position", new_posR);
+                                slide_left.setPosition(new_posL);
+                                slide_right.setPosition(new_posR);
+                            } else {
+                                telemetry.addData("slide position wrong", new_posL);
+                                telemetry.addData("slide position wrong", new_posR);
+                            }
+
+                            up_down_hinge.setPosition(0);
+                            telemetry.update();
                         }
-
-                        up_down_hinge.setPosition(0);
+                    } else {
+                        telemetry.addLine("No limelight result");
                         telemetry.update();
                     }
-                } else {
-                    telemetry.addLine("No limelight result");
-                    telemetry.update();
-                }
+                }).start();
             }
 
 //            telemetry.addData("Status", "Run Time: " + runtime.toString());
