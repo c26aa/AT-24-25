@@ -328,10 +328,10 @@ public class PinpointAuto2 extends LinearOpMode {
         off();
 
         // Wait for .2 seconds
-        axial = 0.25;
+        axial = 0.3;
         lateral = 0;
         move();
-        sleep(300);
+        sleep(100);
         leftFrontDrive.setPower(0);
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
@@ -344,16 +344,17 @@ public class PinpointAuto2 extends LinearOpMode {
             useLiftEncoder = true;
 //            lift_target = 620;
             if (blockNum > 0){
-                lift_target = 800;
+                lift_target = 640;
             } else {
-                lift_target = 830;
+                lift_target = 700;
             }
         }
 
         //  pull claw back and lift scissor lift to place sample
         top_arm.setPosition(OUTTAKE_ARM_BACK);
 //        uncomment once lift is ready
-        while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive()) {
+        double liftuptime = runtime.milliseconds();
+        while (lift_target > lift_left.getCurrentPosition() + 15 && opModeIsActive() && runtime.milliseconds()<liftuptime+2000) {
             telemetry.addData("lift target val", lift_left.getCurrentPosition() + 15);
             telemetry.update();
             if (lift_target > lift_left.getCurrentPosition() + 15) {
@@ -885,7 +886,7 @@ public class PinpointAuto2 extends LinearOpMode {
         runtime.reset();
 
 
-        while (opModeIsActive() && runtime.seconds() < 28.5) {
+        while (opModeIsActive() && runtime.seconds() < 29) {
 
             telemetry.addData("Status", "Initialized");
             telemetry.addData("X offset", odo.getXOffset());
@@ -964,14 +965,14 @@ public class PinpointAuto2 extends LinearOpMode {
                 // place third specimen
 //                second pickup
                 pickupY += 14;
-                pickupX -= 2;
+                pickupX -= 4;
                 placeX -= 3;
 
                 pickup(); // go from submersible to specimen pick up area
                 placeSpecimen(); // place the third specimen
                 blockNum += 1; // update how many blocks for alignment
 
-                pickupX += 1.5;
+                pickupX += 2.5;
                 placeX += 0;
 
                 // place fourth specimen

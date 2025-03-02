@@ -16,9 +16,9 @@ import java.util.List;
 
 
 
-@TeleOp(name = "Tele-Op RED", group = "Linear OpMode")
+@TeleOp(name = "Tele-Op BLUE", group = "Linear OpMode")
 //@Disabled
-public class BasicOmniOpMode_Linear extends LinearOpMode {
+public class TeleopBLUE extends LinearOpMode {
 
     //limelight stuff
     private Limelight3A limelight;
@@ -525,7 +525,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             //limelight code
             if (gamepad2.right_stick_x > 0.2 || gamepad2.right_stick_x < -0.2) {
                 if (gamepad2.right_stick_x > 0.2) {
-                    limelight.pipelineSwitch(0);
+                    limelight.pipelineSwitch(2);
                 } else {
                     limelight.pipelineSwitch(1);
                 }

@@ -868,7 +868,7 @@ public class SampleAuto extends LinearOpMode {
         liftPosition = true;
         waitForStart();
 
-        while (opModeIsActive()) {
+        while (opModeIsActive() && runtime.seconds() < 28.5) {
 //            telemetry.addData("Status", "Initialized");
 //            telemetry.addData("X offset", odo.getXOffset());
 //            telemetry.addData("Y offset", odo.getYOffset());
