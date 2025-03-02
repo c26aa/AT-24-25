@@ -851,7 +851,7 @@ public class SampleAuto extends LinearOpMode {
 //        odo.recalibrateIMU();
         odo.resetPosAndIMU();
 
-        double startTime = System.currentTimeMillis();
+       // double startTime = System.currentTimeMillis();
 
         // Initialize the drive system variables.
 
@@ -867,6 +867,8 @@ public class SampleAuto extends LinearOpMode {
 //        top_arm.setPosition(0.1);
         liftPosition = true;
         waitForStart();
+//        resetRuntime();
+        runtime.reset();
 
         while (opModeIsActive() && runtime.seconds() < 28.5) {
 //            telemetry.addData("Status", "Initialized");
@@ -877,8 +879,7 @@ public class SampleAuto extends LinearOpMode {
 //            telemetry.update();
 
             // Wait for the game to start (driver presses START)
-            waitForStart();
-            resetRuntime();
+           // waitForStart();
 
             // Run until the end of the match (driver presses STOP)
 
